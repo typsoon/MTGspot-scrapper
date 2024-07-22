@@ -1,1 +1,1 @@
-# MTGspotscrapper
+# MTGspot scrapper
