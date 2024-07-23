@@ -1,17 +1,14 @@
 package org.example.mtgspotscrapper.model;
 
+import org.example.mtgspotscrapper.App;
 import org.example.mtgspotscrapper.model.mtgapi.ImportantCardData;
 import org.example.mtgspotscrapper.model.records.ListData;
 import org.example.mtgspotscrapper.model.records.PrevPriceAndCardData;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.sql.*;
 import java.util.*;
 
 public class SimpleDatabaseService implements DatabaseService {
-    private static final Logger logger = LoggerFactory.getLogger(SimpleDatabaseService.class);
-
     private final Connection connection;
 
     @Override
@@ -67,9 +64,9 @@ public class SimpleDatabaseService implements DatabaseService {
     public static void main(String[] args) throws SQLException {
         DatabaseService databaseService = new SimpleDatabaseService("jdbc:postgresql://localhost/scrapper", "scrapper", "aaa");
 
-        logger.debug(databaseService.getListsNames().toString());
-        logger.debug(databaseService.getAllCardData().toString());
-        logger.debug(databaseService.getCardData("test list").toString());
+        App.logger.debug(databaseService.getListsNames().toString());
+        App.logger.debug(databaseService.getAllCardData().toString());
+        App.logger.debug(databaseService.getCardData("test list").toString());
 //            props.setProperty("ssl", "true");
     }
 }
