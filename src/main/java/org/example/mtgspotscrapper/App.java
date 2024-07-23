@@ -25,11 +25,10 @@ public class App extends Application {
 //        stage.setTitle("MTGspot Scrapper");
         LoginSceneController loginSceneController = new LoginSceneController(stage);
 
-        logger.debug(FXMLAddresses.LOGIN_SCREEN);
         FXMLLoader loginScreenLoader = new FXMLLoader(App.class.getResource(FXMLAddresses.LOGIN_SCREEN));
         loginScreenLoader.setController(loginSceneController);
 
-        if (loginSceneController.loggedInWithSavedCredentials() == null) {
+        if (!loginSceneController.loggedInWithSavedCredentials()) {
             stage.setScene(new Scene(loginScreenLoader.load()));
             stage.show();
         }
