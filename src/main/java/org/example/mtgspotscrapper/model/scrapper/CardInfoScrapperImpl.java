@@ -1,4 +1,4 @@
-package org.example.mtgspotscrapper.scrapper;
+package org.example.mtgspotscrapper.model.scrapper;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;

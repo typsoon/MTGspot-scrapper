@@ -1,4 +1,4 @@
-package org.example.mtgspotscrapper.mtgapi;
+package org.example.mtgspotscrapper.model.mtgapi;
 
 import java.util.Collection;
 

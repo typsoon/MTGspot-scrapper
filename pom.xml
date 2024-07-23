@@ -23,11 +23,11 @@
             <version> ${selenium.version} </version>
         </dependency>
 
-        <dependency>
-            <groupId>dev.failsafe</groupId>
-            <artifactId>failsafe</artifactId>
-            <version>${failsafe.version}</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>dev.failsafe</groupId>-->
+<!--            <artifactId>failsafe</artifactId>-->
+<!--            <version>${failsafe.version}</version>-->
+<!--        </dependency>-->
 
         <dependency>
             <groupId>io.magicthegathering</groupId>
@@ -38,7 +38,31 @@
         <dependency>
             <groupId>org.json</groupId>
             <artifactId>json</artifactId>
-            <version>20210307</version>
+            <version>20240303</version>
+        </dependency>
+
+<!--        <dependency>-->
+<!--            <groupId>org.jooq</groupId>-->
+<!--            <artifactId>jooq</artifactId>-->
+<!--            <version>3.19.10</version>-->
+<!--        </dependency>-->
+
+<!--        &lt;!&ndash; These may not be required, unless you use the GenerationTool manually for code generation &ndash;&gt;-->
+<!--        <dependency>-->
+<!--            <groupId>org.jooq</groupId>-->
+<!--            <artifactId>jooq-meta</artifactId>-->
+<!--            <version>3.19.10</version>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>org.jooq</groupId>-->
+<!--            <artifactId>jooq-codegen</artifactId>-->
+<!--            <version>3.19.10</version>-->
+<!--        </dependency>-->
+
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.7.3</version>
         </dependency>
 
         <dependency>
@@ -65,11 +89,27 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- Logging for JavaFX -->
+<!--         Logging for JavaFX -->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
             <version>1.7.32</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-api</artifactId>
+            <version>2.23.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+            <version>2.23.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-slf4j-impl</artifactId>
+            <version>2.23.1</version>
         </dependency>
     </dependencies>
 
@@ -93,7 +133,7 @@
                         <!-- Default configuration for running with: mvn clean javafx:run -->
                         <id>default-cli</id>
                         <configuration>
-                            <mainClass>org.example.mtgspotscrapper/org.example.mtgspotscrapper.HelloApplication
+                            <mainClass>org.example.mtgspotscrapper/org.example.mtgspotscrapper.App
                             </mainClass>
                             <launcher>app</launcher>
                             <jlinkZipName>app</jlinkZipName>

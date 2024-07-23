@@ -1,8 +1,9 @@
-package org.example.mtgspotscrapper.mtgapi;
+package org.example.mtgspotscrapper.model.mtgapi;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
@@ -16,7 +17,7 @@ public class SimpleMtgApiService implements MtgApiService {
         try {
             // Construct the URL
             String encodedCardName = java.net.URLEncoder.encode(cardName, StandardCharsets.UTF_8);
-            URL url = new URL("https://api.magicthegathering.io/v1/cards?name=" + encodedCardName);
+            URL url = new URI("https://api.magicthegathering.io/v1/cards?name=" + encodedCardName).toURL();
 
             // Open a connection to the URL
             connection = (HttpURLConnection) url.openConnection();
@@ -69,5 +70,7 @@ public class SimpleMtgApiService implements MtgApiService {
         MtgApiService mtgApiService = new SimpleMtgApiService();
 
         System.out.println(mtgApiService.getImportantCardData("Llanowar Elves"));
+        System.out.println(mtgApiService.getImportantCardData("Black Lotus"));
+        System.out.println(mtgApiService.getImportantCardData("Beast Within"));
     }
 }
