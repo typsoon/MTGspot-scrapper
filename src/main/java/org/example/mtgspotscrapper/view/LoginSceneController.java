@@ -40,17 +40,19 @@ public class LoginSceneController {
         }
     }
 
-    public DatabaseService loggedInWithSavedCredentials() {
+    public boolean loggedInWithSavedCredentials() {
         try {
             Properties credentials = new Properties();
             InputStream stream = App.class.getResourceAsStream("localData/credentials.properties");
 
             credentials.load(stream);
 //            System.out.println(new Credentials(credentials.getProperty("username"), credentials.getProperty("password")));
-            return new SimpleDatabaseService("jdbc:postgresql://localhost/scrapper", credentials.getProperty("username"), credentials.getProperty("password"));
+            DatabaseService databaseService = new SimpleDatabaseService("jdbc:postgresql://localhost/scrapper", credentials.getProperty("username"), credentials.getProperty("password"));
+            displayMainStage(databaseService);
+            return true;
         }
         catch (Exception ignored) {
-            return null;
+            return false;
         }
     }
 
