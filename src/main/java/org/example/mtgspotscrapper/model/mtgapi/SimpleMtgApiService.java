@@ -5,18 +5,22 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 
+import org.example.mtgspotscrapper.App;
+import org.example.mtgspotscrapper.model.records.CardData;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class SimpleMtgApiService implements MtgApiService {
     @Override
-    public ImportantCardData getImportantCardData(String cardName) {
+    public CardData getCardData(String cardName) {
         HttpURLConnection connection = null;
         try {
             // Construct the URL
-            String encodedCardName = java.net.URLEncoder.encode(cardName, StandardCharsets.UTF_8);
+            String encodedCardName = URLEncoder.encode(cardName, StandardCharsets.UTF_8);
             URL url = new URI("https://api.magicthegathering.io/v1/cards?name=" + encodedCardName).toURL();
 
             // Open a connection to the URL
@@ -37,27 +41,33 @@ public class SimpleMtgApiService implements MtgApiService {
 
             // Get the "cards" array
             JSONArray cardsArray = jsonResponse.getJSONArray("cards");
+//            Collection<JSONObject> filtered = new ArrayList<>();
 
-            // Extract the first card object
-            JSONObject card = (JSONObject) cardsArray.get(0);
-
-            if (jsonResponse.has("cards")) {
-
-                return new ImportantCardData(
-                        card.getString("name"),
-                        card.getInt("cmc"),
-                        null,
-                        null,
-                        card.getString("type"),
-                        null,
-                        card.getString("imageUrl")
-                        );
-            } else {
-                return null;
+            JSONObject answer = null;
+            for (var element : cardsArray) {
+                answer = (JSONObject) element;
+                if (answer.getString("name").equals(cardName)) {
+                    break;
+//                    filtered.add(answer);
+                }
             }
 
+//            filtered.forEach(element -> App.logger.debug(element.toString()));
+
+            // Extract the first card object
+            if (answer == null)
+                return null;
+
+            return new CardData(
+                answer.getInt("multiverseid"),
+                answer.getString("name"),
+                0,
+                0,
+                answer.getString("imageUrl")
+            );
+
         } catch (Exception e) {
-            e.printStackTrace();
+            App.logger.debug(Arrays.toString(e.getStackTrace()));
             return null;
         } finally {
             if (connection != null) {
@@ -69,8 +79,9 @@ public class SimpleMtgApiService implements MtgApiService {
     public static void main(String[] args) {
         MtgApiService mtgApiService = new SimpleMtgApiService();
 
-        System.out.println(mtgApiService.getImportantCardData("Llanowar Elves"));
-        System.out.println(mtgApiService.getImportantCardData("Black Lotus"));
-        System.out.println(mtgApiService.getImportantCardData("Beast Within"));
+        System.out.println(mtgApiService.getCardData("Wastes"));
+        System.out.println(mtgApiService.getCardData("Llanowar Elves"));
+        System.out.println(mtgApiService.getCardData("Black Lotus"));
+        System.out.println(mtgApiService.getCardData("Beast Within"));
     }
 }

@@ -23,8 +23,8 @@ public class LoginSceneController {
     }
 
     private void displayMainStage(DatabaseService databaseService) throws IOException {
-        ScreenManager screenManager = new ScreenManager(databaseService, primaryStage);
-        FXMLLoader managerLoader = new FXMLLoader(App.class.getResource(FXMLAddresses.SCREEN_MANAGER));
+        ScreenManager screenManager = new ScreenManager(databaseService);
+        FXMLLoader managerLoader = new FXMLLoader(App.class.getResource(Addresses.SCREEN_MANAGER));
         managerLoader.setController(screenManager);
 
         primaryStage.setScene(new Scene(managerLoader.load()));

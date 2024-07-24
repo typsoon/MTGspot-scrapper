@@ -1,5 +1,7 @@
 package org.example.mtgspotscrapper.model.mtgapi;
 
+import org.example.mtgspotscrapper.model.records.CardData;
+
 public interface MtgApiService {
-    ImportantCardData getImportantCardData(String cardName);
+    CardData getCardData(String cardName);
 }

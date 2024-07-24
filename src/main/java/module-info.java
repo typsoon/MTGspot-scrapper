@@ -10,6 +10,8 @@ module org.example.mtgspotscrapper {
     requires org.json;
     requires org.slf4j;
     requires dev.failsafe.core;
+    requires javasdk;
+    requires org.checkerframework.checker.qual;
 
     opens org.example.mtgspotscrapper.view to javafx.fxml;
 
