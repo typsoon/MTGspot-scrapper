@@ -8,11 +8,15 @@ import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.List;
 
 public class CardInfoScrapperImpl implements CardInfoScrapper {
+    public static final Logger scrapperLogger = LoggerFactory.getLogger(CardInfoScrapperImpl.class);
+
     @Override
     public Double getCardPrice(String cardName) {
         ChromeOptions options = new ChromeOptions();
@@ -21,7 +25,7 @@ public class CardInfoScrapperImpl implements CardInfoScrapper {
         // Create a new instance of the Chrome driver
         WebDriver driver = new ChromeDriver(options);
 //        WebDriver driver = new ChromeDriver();
-        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(20));
 
         try {
             // Navigate to the page with the form
@@ -79,26 +83,25 @@ public class CardInfoScrapperImpl implements CardInfoScrapper {
             for (WebElement element : elements) {
                 List<WebElement> children = element.findElements(By.xpath("./*"));
                 String[] data = children.getFirst().getText().split("\n");
-                for (String attribute : data) {
-                    System.out.print(attribute + ", ");
-                }
+//                for (String attribute : data) {
+////                    System.out.print(attribute + ", ");
+//                }
                 if (data.length >= 5 && data[0].equals(cardName)) {
                     minPrice = Math.min(minPrice, Double.parseDouble(data[4].substring(0, data[4].length() - 2)));
                 }
-                System.out.println();
             }
 
             Thread.sleep(250);
 
             // Print the current page URL
-            System.out.println("Current page URL: " + driver.getCurrentUrl());
+            scrapperLogger.info("Current page URL: {}", driver.getCurrentUrl());
 
             if (minPrice == Double.POSITIVE_INFINITY) {
                 return null;
             }
             return minPrice;
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            scrapperLogger.error("Thread interrupted", e);
             return null;
         } finally {
             // Close the WebDriver

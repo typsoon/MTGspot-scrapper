@@ -14,8 +14,11 @@ public class DeleteListEventHandler extends MyEventHandler<DeleteListEvent> {
     @Override
     public void handle(DeleteListEvent deleteListEvent) {
         try {
-            databaseService.deleteList(deleteListEvent.getListName());
+            if(databaseService.deleteList(deleteListEvent.getListName()))
+                myEventLogger.info("Deleted list: {}", deleteListEvent.getListName());
+            else myEventLogger.info("Could not delete list (list doesn't exist): {}", deleteListEvent.getListName());
         } catch (SQLException e) {
+            myEventLogger.error("Failed to delete list {}", deleteListEvent.getListName(), e);
             throw new RuntimeException(e);
         }
     }

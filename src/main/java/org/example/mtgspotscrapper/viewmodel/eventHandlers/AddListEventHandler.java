@@ -18,9 +18,9 @@ public class AddListEventHandler extends MyEventHandler<AddListEvent> {
         try {
             @SuppressWarnings("unused")
             CardList cardList = databaseService.addList(addListEvent.getListName());
-
-
+            myEventLogger.info("List added, list name: {}", addListEvent.getListName());
         } catch (SQLException | IOException e) {
+            myEventLogger.error("Failed to add list: {}", addListEvent.getListName(),  e);
             throw new RuntimeException(e);
         }
     }

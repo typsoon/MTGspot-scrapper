@@ -11,8 +11,6 @@ public interface DatabaseService {
     Card addCard(String cardName) throws SQLException, IOException;
     CardList addList(String listName) throws SQLException, IOException;
 
-    @SuppressWarnings({"unused", "UnusedReturnValue"})
-//    boolean deleteCard(String cardName) throws SQLException;
     boolean deleteList(String listName) throws SQLException;
 
     Card getCard(String cardName) throws SQLException;

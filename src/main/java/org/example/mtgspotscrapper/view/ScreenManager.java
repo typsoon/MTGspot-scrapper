@@ -68,7 +68,7 @@ public class ScreenManager {
         borderPane.addEventHandler(UpdateAvailabilityEvent.UPDATE_AVAILABILITY, new UpdateAvailabilityEventHandler(databaseService));
     }
 
-    void displayLists() {
+    public void displayLists() {
         try {
             cardsFlowPane.getChildren().clear();
             Collection<CardList> cardLists = databaseService.getAllLists();

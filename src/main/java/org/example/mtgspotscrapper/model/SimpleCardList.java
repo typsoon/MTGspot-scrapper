@@ -33,8 +33,7 @@ public class SimpleCardList implements CardList {
 
     @Override
     public Collection<Card> getCards() throws SQLException {
-        String sql =
-            """
+        String sql = """
                 SELECT multiverse_id, previous_price, card_name, null, null, null, image_address
                 FROM cards JOIN public.listcards USING(multiverse_id)
                 JOIN lists USING (list_id)
@@ -48,7 +47,8 @@ public class SimpleCardList implements CardList {
         Collection<Card> answer = new ArrayList<>();
         while (resultSet.next()) {
             answer.add(new SimpleCard(connection,
-                    new CardData(resultSet.getInt("multiverse_id"), resultSet.getString("card_name"), 0, 0, null), resultSet.getString("image_address")));
+                    new CardData(resultSet.getInt("multiverse_id"), resultSet.getString("card_name"), null),
+                    resultSet.getString("image_address")));
         }
         return answer;
     }
@@ -59,8 +59,7 @@ public class SimpleCardList implements CardList {
 //            databaseService.addCard(card.getCardData().cardName());
 //        }
 
-        String sql =
-        """
+        String sql = """
             INSERT INTO listcards (list_id, multiverse_id) VALUES (?::integer, ?::integer);
         """;
 

@@ -157,10 +157,8 @@ public class SimpleDatabaseService implements DatabaseService {
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
                 if (resultSet.next()) {
                     CardData cardData = new CardData(resultSet.getInt("multiverse_id"),
-                            resultSet.getString("card_name"),
-                            resultSet.getDouble("previous_price"),
-                            resultSet.getDouble("actual_price"),
-                            null);
+                            resultSet.getString("card_name")
+                            , null);
                     return new SimpleCard(connection, cardData, resultSet.getString("image_address"));
                 }
                 else return null;
@@ -181,7 +179,7 @@ public class SimpleDatabaseService implements DatabaseService {
         Collection<Card> answer = new ArrayList<>();
         while (resultSet.next()) {
             answer.add(new SimpleCard(connection,
-                    new CardData(resultSet.getInt("multiverse_id"), resultSet.getString("card_name"), 0, 0, null),
+                    new CardData(resultSet.getInt("multiverse_id"), resultSet.getString("card_name"), null),
                     resultSet.getString("image_address")));
         }
         return answer;

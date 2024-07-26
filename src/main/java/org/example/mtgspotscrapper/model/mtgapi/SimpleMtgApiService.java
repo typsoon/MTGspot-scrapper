@@ -61,8 +61,6 @@ public class SimpleMtgApiService implements MtgApiService {
             return new CardData(
                 answer.getInt("multiverseid"),
                 answer.getString("name"),
-                0,
-                0,
                 answer.getString("imageUrl")
             );
 

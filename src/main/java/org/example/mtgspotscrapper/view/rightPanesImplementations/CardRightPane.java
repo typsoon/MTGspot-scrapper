@@ -9,6 +9,7 @@ import org.example.mtgspotscrapper.view.AbstractRightPane;
 import org.example.mtgspotscrapper.view.ScreenManager;
 import org.example.mtgspotscrapper.view.viewEvents.eventTypes.AddCardEvent;
 import org.example.mtgspotscrapper.view.viewEvents.eventTypes.DeleteCardEvent;
+import org.example.mtgspotscrapper.view.viewEvents.eventTypes.UpdateAvailabilityEvent;
 import org.example.mtgspotscrapper.viewmodel.eventHandlers.records.AddCardData;
 import org.example.mtgspotscrapper.viewmodel.eventHandlers.records.DeleteCardData;
 import org.example.mtgspotscrapper.viewmodel.CardList;
@@ -56,6 +57,11 @@ public class CardRightPane extends AbstractRightPane {
 
         deleteLabel.setOnMouseClicked(mouseEvent -> {
             deleteLabel.fireEvent(new DeleteCardEvent(new DeleteCardData(addDeleteField.getText(), cardList)));
+            screenManager.displayList(cardList);
+        });
+
+        updateAvailability.setOnMouseClicked(mouseEvent -> {
+            updateAvailability.fireEvent(new UpdateAvailabilityEvent(cardList));
             screenManager.displayList(cardList);
         });
     }
