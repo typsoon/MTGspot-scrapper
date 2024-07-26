@@ -1,10 +1,14 @@
 package org.example.mtgspotscrapper.model;
 
-import org.example.mtgspotscrapper.App;
 import org.example.mtgspotscrapper.model.mtgapi.MtgApiService;
 import org.example.mtgspotscrapper.model.mtgapi.SimpleMtgApiService;
 import org.example.mtgspotscrapper.model.records.CardData;
 import org.example.mtgspotscrapper.model.records.ListData;
+import org.example.mtgspotscrapper.viewmodel.Card;
+import org.example.mtgspotscrapper.viewmodel.CardList;
+import org.example.mtgspotscrapper.viewmodel.DatabaseService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -16,42 +20,42 @@ import java.sql.*;
 import java.util.*;
 
 public class SimpleDatabaseService implements DatabaseService {
+    private static final Logger log = LoggerFactory.getLogger(SimpleDatabaseService.class);
     private final Connection connection;
 
     @Override
     public Collection<CardList> getAllLists() throws SQLException {
-        Statement statement = connection.createStatement();
-        ResultSet resultSet = statement.executeQuery(
-        """
+        String sql = """
                 SELECT list_id, list_name, logo_path FROM lists LEFT JOIN ListsLogos USING (logo_id);
-            """
-        );
+            """;
 
-        Collection<CardList> answer = new ArrayList<>();
-        while (resultSet.next()) {
-            answer.add(new SimpleCardList(new ListData(resultSet.getInt(1), resultSet.getString(2), resultSet.getString(3)), connection, this));
+        try (Statement statement = connection.createStatement();
+             ResultSet resultSet = statement.executeQuery(sql)) {
+            Collection<CardList> answer = new ArrayList<>();
+            while (resultSet.next()) {
+                answer.add(new SimpleCardList(new ListData(resultSet.getInt(1), resultSet.getString(2), resultSet.getString(3)), connection));
+            }
+            return answer;
         }
-        return answer;
     }
 
     @Override
     public CardList getCardList(String name) throws SQLException {
-        PreparedStatement preparedStatement = connection.prepareStatement(
-        """
+        String sql = """
                 SELECT list_id, list_name, logo_path FROM lists LEFT JOIN ListsLogos USING (logo_id) WHERE list_name = ?::varchar;
-            """
-        );
-        preparedStatement.setString(1, name);
-        ResultSet resultSet = preparedStatement.executeQuery();
+            """;
 
-        if (resultSet.next()) {
-            return new SimpleCardList(new ListData(resultSet.getInt(1), resultSet.getString(2), resultSet.getString(3)), connection, this);
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.setString(1, name);
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    return new SimpleCardList(new ListData(resultSet.getInt(1), resultSet.getString(2), resultSet.getString(3)), connection);
+                }
+            }
         }
-
         return null;
     }
 
-//    TODO: write custom exception to handle errors like "no such card in mtg database"
     @Override
     public Card addCard(String cardName) throws SQLException, IOException {
         MtgApiService mtgApiService = new SimpleMtgApiService();
@@ -61,108 +65,173 @@ public class SimpleDatabaseService implements DatabaseService {
             throw new RuntimeException("Card not found in MTG database: " + cardName);
         }
 
-        PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM Cards WHERE multiverse_id = ?::integer;");
-        preparedStatement.setInt(1, cardData.multiverseId());
-        ResultSet resultSet = preparedStatement.executeQuery();
-
-        if (resultSet.next()) {
-            App.logger.debug(resultSet.getString(1));
-            throw new SQLException("This card is already present in the database");
+        String checkCardSql = "SELECT * FROM Cards WHERE multiverse_id = ?::integer;";
+        try (PreparedStatement preparedStatement = connection.prepareStatement(checkCardSql)) {
+            preparedStatement.setInt(1, cardData.multiverseId());
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    throw new SQLException("This card is already present in the database");
+                }
+            }
         }
 
         String downloadedImageAddress = downloadImage(cardData);
 
-        String sql =
-        """
-            INSERT INTO Cards(multiverse_id, card_name, previous_price, actual_price, image_address) Values (?::integer, ?::varchar, null, null, ?::varchar);
+        String insertCardSql = """
+            INSERT INTO Cards(multiverse_id, card_name, previous_price, actual_price, image_address)
+            VALUES (?::integer, ?::varchar, null, null, ?::varchar);
         """;
 
-        preparedStatement = connection.prepareStatement(sql);
-        preparedStatement.setInt(1, cardData.multiverseId());
-        preparedStatement.setString(2, cardData.cardName());
-//        preparedStatement.setDouble(3, cardData.prevPrice());
-//        preparedStatement.setDouble(4, cardData.actPrice());
-        preparedStatement.setString(3, downloadedImageAddress);
-
-        preparedStatement.execute();
+        try (PreparedStatement preparedStatement = connection.prepareStatement(insertCardSql)) {
+            preparedStatement.setInt(1, cardData.multiverseId());
+            preparedStatement.setString(2, cardData.cardName());
+            preparedStatement.setString(3, downloadedImageAddress);
+            preparedStatement.execute();
+        }
 
         return new SimpleCard(connection, cardData, downloadedImageAddress);
     }
 
     @Override
-    public Collection<Card> getAllCardsData() throws SQLException {
-        Statement statement = connection.createStatement();
-        ResultSet resultSet = statement.executeQuery("SELECT * FROM cards");
+    public CardList addList(String listName) throws SQLException {
+        String sql = """
+            INSERT INTO Lists(list_name) VALUES (?::varchar) RETURNING list_id;
+        """;
 
-        return resultSetToCardData(resultSet);
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.setString(1, listName);
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    int listId = resultSet.getInt("list_id");
+                    return new SimpleCardList(new ListData(listId, listName, null), connection);
+                }
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public boolean deleteList(String listName) throws SQLException {
+        String sql =
+        """
+            DELETE FROM Lists WHERE list_name = ?::varchar RETURNING list_id;
+        """;
+
+        int listId = -1;
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.setString(1, listName);
+
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    listId = resultSet.getInt(1);
+                }
+            }
+        }
+
+        if (listId == -1) {
+            return false;
+        }
+
+        sql =
+        """
+            DELETE FROM ListCards WHERE list_id = ?::integer;
+        """;
+
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)){
+            preparedStatement.setInt(1, listId);
+
+            preparedStatement.execute();
+        }
+
+        return true;
+    }
+
+    @Override
+    public Card getCard(String cardName) throws SQLException {
+        String sql = """
+            SELECT * FROM Cards WHERE card_name = ?::varchar;
+        """;
+
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.setString(1, cardName);
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    CardData cardData = new CardData(resultSet.getInt("multiverse_id"),
+                            resultSet.getString("card_name"),
+                            resultSet.getDouble("previous_price"),
+                            resultSet.getDouble("actual_price"),
+                            null);
+                    return new SimpleCard(connection, cardData, resultSet.getString("image_address"));
+                }
+                else return null;
+            }
+        }
+    }
+
+    @Override
+    public Collection<Card> getAllCardsData() throws SQLException {
+        String sql = "SELECT * FROM cards";
+        try (Statement statement = connection.createStatement();
+             ResultSet resultSet = statement.executeQuery(sql)) {
+            return resultSetToCardData(resultSet);
+        }
     }
 
     private Collection<Card> resultSetToCardData(ResultSet resultSet) throws SQLException {
         Collection<Card> answer = new ArrayList<>();
         while (resultSet.next()) {
             answer.add(new SimpleCard(connection,
-                    new CardData(resultSet.getInt("multiverse_id"), resultSet.getString("card_name"), 0, 0, null), resultSet.getString("image_address")));
+                    new CardData(resultSet.getInt("multiverse_id"), resultSet.getString("card_name"), 0, 0, null),
+                    resultSet.getString("image_address")));
         }
         return answer;
     }
 
     public SimpleDatabaseService(String url, String user, String password) throws SQLException {
-        connection = DriverManager.getConnection(url, user, password);
+        this.connection = DriverManager.getConnection(url, user, password);
     }
 
-//    TODO: think whether I should separate these 2 functions from SimpleDatabaseService
     protected String downloadImage(CardData cardData) throws IOException {
         URL imageURL;
         try {
             imageURL = new URI(cardData.imageUrl()).toURL();
-        }
-        catch (URISyntaxException | MalformedURLException e){
+        } catch (URISyntaxException | MalformedURLException e) {
             throw new RuntimeException("Inconsistent data in database:", e);
         }
 
         HttpURLConnection httpURLConnection = (HttpURLConnection) imageURL.openConnection();
-
         int responseCode = httpURLConnection.getResponseCode();
         while (responseCode == HttpURLConnection.HTTP_MOVED_TEMP || responseCode == HttpURLConnection.HTTP_MOVED_PERM) {
             String newUrl = httpURLConnection.getHeaderField("Location");
             httpURLConnection.disconnect();
-
             try {
                 imageURL = new URI(newUrl).toURL();
-            }
-            catch (Exception e) {
-                App.logger.error("Problems on wizards side: {}", Arrays.toString(e.getStackTrace()));
+            } catch (Exception e) {
+                log.error("Problems on wizards side: {}", Arrays.toString(e.getStackTrace()));
                 throw new RuntimeException("Problems on wizards side:", e);
             }
-
             httpURLConnection = (HttpURLConnection) imageURL.openConnection();
             responseCode = httpURLConnection.getResponseCode();
         }
 
-        // Determine file extension from content type
         String contentType = httpURLConnection.getContentType();
         String fileExtension = getFileExtension(contentType);
         if (fileExtension == null) {
             throw new IOException("Unsupported content type: " + contentType);
         }
 
-        // Create directories if not exist
         File directory = new File("downloaded images");
         if (!directory.exists()) {
+            //noinspection ResultOfMethodCallIgnored
             directory.mkdirs();
         }
 
-        // Create file
-        File file = new File(directory, "card"+cardData.multiverseId() + "." + fileExtension);
+        File file = new File(directory, "card" + cardData.multiverseId() + "." + fileExtension);
 
-        // Download and save the image
         try (InputStream inputStream = httpURLConnection.getInputStream()) {
             BufferedImage image = ImageIO.read(inputStream);
             if (image != null) {
-//                file.createNewFile();
-
                 ImageIO.write(image, fileExtension, file);
-//                App.logger.debug("Image successfully saved: {}", file.getAbsolutePath());
                 return file.getAbsolutePath();
             } else {
                 throw new IOException("Failed to load image from URL: " + imageURL);
@@ -174,26 +243,25 @@ public class SimpleDatabaseService implements DatabaseService {
 
     private static String getFileExtension(String contentType) {
         if (contentType == null) return null;
-
         return switch (contentType) {
-//            case "image/jpeg" -> "jpeg";
-//            case "image/png" -> "png";
             case "image/jpeg", "image/png" -> "png";
             case "image/gif" -> "gif";
             default -> null;
         };
     }
 
-    public static void main(String[] args) throws SQLException, IOException {
-        DatabaseService databaseService = new SimpleDatabaseService("jdbc:postgresql://localhost/scrapper", "scrapper", "aaa");
-
-        App.logger.debug(databaseService.getAllLists().toString());
-        App.logger.debug(databaseService.getAllCardsData().toString());
-        App.logger.debug(databaseService.getCardList("test list").toString());
-//            props.setProperty("ssl", "true");
-
-        App.logger.debug(databaseService.addCard("Kodama's reach").toString());
-        App.logger.debug(databaseService.addCard("Swords to Plowshares").toString());
-        App.logger.debug(databaseService.addCard("Kenrith, the Returned King").toString());
+    public static void main(String[] args) {
+        try {
+            DatabaseService databaseService = new SimpleDatabaseService("jdbc:postgresql://localhost/scrapper", "scrapper", "aaa");
+            log.debug(databaseService.getAllLists().toString());
+            log.debug(databaseService.getAllCardsData().toString());
+            log.debug(databaseService.getCardList("test list").toString());
+            log.debug(databaseService.addCard("Kodama's Reach").toString());
+            log.debug(databaseService.addCard("Swords to Plowshares").toString());
+            log.debug(databaseService.addCard("Kenrith, the Returned King").toString());
+            log.debug(databaseService.addCard("Path to Exile").toString());
+        } catch (SQLException | IOException e) {
+            log.error("Something went wrong", e);
+        }
     }
 }

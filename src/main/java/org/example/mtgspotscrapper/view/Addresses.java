@@ -10,4 +10,7 @@ public class Addresses {
     public static final String CARD_INFO = utilsFolderPath + "card-info.fxml";
 
     public static final String DEFAULT_LOGO = "images/wastes.jpeg";
+
+    public static final String LIST_RIGHT_PANE = utilsFolderPath + "list-right-pane.fxml";
+    public static final String CARD_RIGHT_PANE = utilsFolderPath + "card-right-pane.fxml";
 }

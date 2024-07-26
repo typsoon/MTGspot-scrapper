@@ -1,16 +1,19 @@
-package org.example.mtgspotscrapper.view;
+package org.example.mtgspotscrapper.view.cardLogoAndNameImpl;
 
 import javafx.scene.Cursor;
 import javafx.scene.image.Image;
 import org.example.mtgspotscrapper.App;
-import org.example.mtgspotscrapper.model.CardList;
+import org.example.mtgspotscrapper.view.Addresses;
+import org.example.mtgspotscrapper.view.CardLogoAndNameController;
+import org.example.mtgspotscrapper.view.ScreenManager;
+import org.example.mtgspotscrapper.viewmodel.CardList;
 
 import java.util.Objects;
 
 public class ListItemController extends CardLogoAndNameController {
     private final CardList cardList;
 
-    ListItemController(CardList cardList, ScreenManager screenManager) {
+    public ListItemController(CardList cardList, ScreenManager screenManager) {
         super(screenManager);
         this.cardList = cardList;
     }

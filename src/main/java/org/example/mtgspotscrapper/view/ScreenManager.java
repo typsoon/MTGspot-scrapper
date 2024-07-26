@@ -5,21 +5,32 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Cursor;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.FlowPane;
-import javafx.scene.layout.Region;
+import javafx.scene.layout.*;
 import org.example.mtgspotscrapper.App;
-import org.example.mtgspotscrapper.model.CardList;
-import org.example.mtgspotscrapper.model.DatabaseService;
+import org.example.mtgspotscrapper.view.cardLogoAndNameImpl.CardItemController;
+import org.example.mtgspotscrapper.view.cardLogoAndNameImpl.ListItemController;
+import org.example.mtgspotscrapper.viewmodel.eventHandlers.*;
+import org.example.mtgspotscrapper.view.viewEvents.eventTypes.*;
+import org.example.mtgspotscrapper.view.rightPanesImplementations.CardRightPane;
+import org.example.mtgspotscrapper.view.rightPanesImplementations.ListRightPane;
+import org.example.mtgspotscrapper.viewmodel.CardList;
+import org.example.mtgspotscrapper.viewmodel.DatabaseService;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Objects;
 
 public class ScreenManager {
     private final DatabaseService databaseService;
 
-    ScreenManager(DatabaseService databaseService) {
+    private final CardRightPane cardRightPaneController;
+    private final ListRightPane listRightPaneController;
+
+    ScreenManager(DatabaseService databaseService) throws IOException {
         this.databaseService = databaseService;
+        listRightPaneController = new ListRightPane(Addresses.LIST_RIGHT_PANE, databaseService, this);
+        cardRightPaneController = new CardRightPane(Addresses.CARD_RIGHT_PANE, databaseService, this);
     }
 
     @SuppressWarnings("unused")
@@ -44,6 +55,17 @@ public class ScreenManager {
 
         cardLists.setOnMouseClicked(mouseEvent -> displayLists());
         collection.setOnMouseClicked(mouseEvent -> displayCollection());
+
+        borderPane.addEventHandler(AddCardEvent.ADD_CARD_EVENT, new AddCardEventHandler(databaseService));
+        borderPane.addEventHandler(AddListEvent.ADD_LIST, new AddListEventHandler(databaseService));
+
+        borderPane.addEventHandler(DeleteCardEvent.DELETE_CARD_EVENT, new DeleteCardEventHandler(databaseService));
+        borderPane.addEventHandler(DeleteListEvent.DELETE_LIST, new DeleteListEventHandler(databaseService));
+
+        borderPane.addEventHandler(ImportListEvent.IMPORT_LIST, new ImportListEventHandler(databaseService));
+//        borderPane.addEventHandler(SearchCardEvent.SEARCH_CARD, new SearchCardEventHandler(this, databaseService));
+
+        borderPane.addEventHandler(UpdateAvailabilityEvent.UPDATE_AVAILABILITY, new UpdateAvailabilityEventHandler(databaseService));
     }
 
     void displayLists() {
@@ -51,11 +73,16 @@ public class ScreenManager {
             cardsFlowPane.getChildren().clear();
             Collection<CardList> cardLists = databaseService.getAllLists();
             for (CardList cardList : cardLists) {
+                if (Objects.equals(cardList.getName(), "Collection")) {
+                    continue;
+                }
                 FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource(Addresses.LIST_INFO));
                 fxmlLoader.setController(new ListItemController(cardList, this));
 
                 cardsFlowPane.getChildren().add(fxmlLoader.load());
             }
+
+            borderPane.setRight(listRightPaneController.getRightPane());
         }
         catch (Exception e) {
             App.logger.error(Arrays.toString(e.getStackTrace()));
@@ -65,7 +92,7 @@ public class ScreenManager {
 
     void displayCollection() {
         try {
-            cardsFlowPane.getChildren().clear();
+            displayList(databaseService.getCardList("Collection"));
         }
         catch (Exception e) {
             App.logger.error(Arrays.toString(e.getStackTrace()));
@@ -73,7 +100,7 @@ public class ScreenManager {
         }
     }
 
-    void displayList(CardList cardList) {
+    public void displayList(CardList cardList) {
         try {
             cardsFlowPane.getChildren().clear();
             for (var cardData : cardList.getCards()) {
@@ -82,6 +109,8 @@ public class ScreenManager {
 
                 cardsFlowPane.getChildren().add(fxmlLoader.load());
             }
+
+            borderPane.setRight(cardRightPaneController.getRightPane(cardList));
         }
         catch (Exception e) {
             App.logger.error(Arrays.toString(e.getStackTrace()));
@@ -90,7 +119,7 @@ public class ScreenManager {
     }
 
     public void displayAlert(Exception e) {
-        e.printStackTrace();
+        App.logger.error("Something went wrong {}", e.getMessage(), e);
 
         Alert alert = new Alert(Alert.AlertType.ERROR);
 

@@ -1,11 +1,14 @@
 package org.example.mtgspotscrapper.model;
 
 import org.example.mtgspotscrapper.model.records.CardData;
+import org.example.mtgspotscrapper.viewmodel.Card;
 
 import java.sql.Connection;
 
 public class SimpleCard implements Card {
+    @SuppressWarnings({"unused", "FieldCanBeLocal"})
     private final Connection connection;
+
     private final CardData cardData;
     private final String localImageAddress;
 

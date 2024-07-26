@@ -8,11 +8,12 @@ import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import org.example.mtgspotscrapper.App;
-import org.example.mtgspotscrapper.model.DatabaseService;
+import org.example.mtgspotscrapper.viewmodel.DatabaseService;
 import org.example.mtgspotscrapper.model.SimpleDatabaseService;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.sql.SQLException;
 import java.util.Properties;
 
 public class LoginSceneController {
@@ -40,18 +41,26 @@ public class LoginSceneController {
         }
     }
 
-    public boolean loggedInWithSavedCredentials() {
+    public boolean loggedInWithSavedCredentials() throws IOException {
         try {
             Properties credentials = new Properties();
-            InputStream stream = App.class.getResourceAsStream("localData/credentials.properties");
 
-            credentials.load(stream);
-//            System.out.println(new Credentials(credentials.getProperty("username"), credentials.getProperty("password")));
-            DatabaseService databaseService = new SimpleDatabaseService("jdbc:postgresql://localhost/scrapper", credentials.getProperty("username"), credentials.getProperty("password"));
-            displayMainStage(databaseService);
-            return true;
+            try (InputStream stream = App.class.getResourceAsStream("localData/credentials.properties")) {
+                DatabaseService databaseService;
+                try {
+                    credentials.load(stream);
+
+                    databaseService = new SimpleDatabaseService("jdbc:postgresql://localhost/scrapper", credentials.getProperty("username"), credentials.getProperty("password"));
+                }
+                catch (IOException e) {
+                    return false;
+                }
+
+                displayMainStage(databaseService);
+                return true;
+            }
         }
-        catch (Exception ignored) {
+        catch (SQLException ignored) {
             return false;
         }
     }

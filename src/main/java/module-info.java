@@ -12,8 +12,11 @@ module org.example.mtgspotscrapper {
     requires dev.failsafe.core;
     requires javasdk;
     requires org.checkerframework.checker.qual;
+    requires org.controlsfx.controls;
 
     opens org.example.mtgspotscrapper.view to javafx.fxml;
 
     exports org.example.mtgspotscrapper;
+    opens org.example.mtgspotscrapper.view.rightPanesImplementations to javafx.fxml;
+    opens org.example.mtgspotscrapper.view.cardLogoAndNameImpl to javafx.fxml;
 }

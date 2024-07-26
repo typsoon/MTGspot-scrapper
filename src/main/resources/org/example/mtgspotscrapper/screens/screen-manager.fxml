@@ -9,9 +9,9 @@
 <?import javafx.scene.text.Font?>
 
 <!--suppress JavaFxDefaultTag -->
-<BorderPane fx:id="borderPane" prefHeight="532.0" prefWidth="922.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1">
+<BorderPane fx:id="borderPane" prefHeight="636.0" prefWidth="1022.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1">
    <top>
-      <Pane prefHeight="45.0" prefWidth="640.0" style="-fx-background-color: #94d8e3;" BorderPane.alignment="CENTER">
+      <Pane prefHeight="45.0" prefWidth="640.0" style="-fx-background-color: #ADE8F4;" BorderPane.alignment="CENTER">
          <children>
             <HBox layoutX="14.0" layoutY="10.0" prefHeight="42.0" prefWidth="300.0" spacing="30.0">
                <children>
@@ -30,9 +30,6 @@
          </children>
       </Pane>
    </top>
-   <right>
-      <Pane prefHeight="453.0" prefWidth="263.0" BorderPane.alignment="CENTER" />
-   </right>
    <left>
       <ScrollPane hbarPolicy="NEVER" prefHeight="487.0" prefWidth="613.0" BorderPane.alignment="CENTER">
          <content>
