@@ -17,12 +17,14 @@ public class SimpleCard implements Card {
     private final Connection connection;
 
     private final CardData cardData;
-//    private CompletableFuture<CardPrice> futureCardPrice;
 
-    //    TODO: do something with this because it seems like a bad practice
-    //   Cards that share multiverseId should share futureCardPriceWrapper and downloadedImageAddress this is somehow similar to Singleton design pattern
-    private static final ConcurrentMap<Integer, FutureCardPriceWrapper> idToPriceWrapperMapping = new ConcurrentHashMap<>();
+    /*
+        TODO: do something with this because it seems like a bad practice
+           Cards that share multiverseId should share futureCardPriceWrapper and downloadedImageAddress this is somehow similar to Singleton design pattern
+    */
+
     private static final ConcurrentMap<Integer, CompletableFuture<String>> downloadedImageAddresses = new ConcurrentHashMap<>();
+    private static final ConcurrentMap<Integer, FutureCardPriceWrapper> idToPriceWrapperMapping = new ConcurrentHashMap<>();
 
     private final FutureCardPriceWrapper futureCardPriceWrapper;
 
@@ -80,7 +82,6 @@ public class SimpleCard implements Card {
         }
 
         return futureCardPriceWrapper.getFuturePrice().thenApply(cardPrice -> cardPrice);
-//        return futureCardPriceWrapper.getFuturePrice();
     }
 
     @Override
@@ -99,7 +100,7 @@ public class SimpleCard implements Card {
                     try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                         final double actCardPrice = getActCardPrice().actPrice();
 
-                        if (futureActCardPrice != 0) {
+                        if (futureActCardPrice != null && futureActCardPrice != 0) {
                             preparedStatement.setDouble(1, futureActCardPrice);
                         } else {
                             preparedStatement.setNull(1, Types.NUMERIC);
@@ -109,15 +110,15 @@ public class SimpleCard implements Card {
                         preparedStatement.executeUpdate();
 
                         log.debug("New card price: {}", futureActCardPrice);
-                        return new CardPrice(actCardPrice, futureActCardPrice);
+                        return new CardPrice(actCardPrice, futureActCardPrice != null ? futureActCardPrice : 0);
                     } catch (SQLException e) {
                         throw new RuntimeException(e);
                     }
                 })
         );
 
-        log.debug("Future price: {}, isDone: {}, multiverseId: {}, hash: {}", futureCardPriceWrapper.getFuturePrice(), futureCardPriceWrapper.getFuturePrice().isDone(),
-                cardData.multiverseId(), futureCardPriceWrapper.getFuturePrice().hashCode());
+//        log.debug("Future price: {}, isDone: {}, multiverseId: {}, hash: {}", futureCardPriceWrapper.getFuturePrice(), futureCardPriceWrapper.getFuturePrice().isDone(),
+//                cardData.multiverseId(), futureCardPriceWrapper.getFuturePrice().hashCode());
 //        return futureCardPrice;
     }
 
@@ -146,11 +147,11 @@ public class SimpleCard implements Card {
 class FutureCardPriceWrapper {
     private CompletableFuture<CardPrice> futurePrice;
 
-    public CompletableFuture<CardPrice> getFuturePrice() {
+    CompletableFuture<CardPrice> getFuturePrice() {
         return futurePrice;
     }
 
-    public void setFuturePrice(CompletableFuture<CardPrice> futurePrice) {
+    void setFuturePrice(CompletableFuture<CardPrice> futurePrice) {
         this.futurePrice = futurePrice;
     }
 }

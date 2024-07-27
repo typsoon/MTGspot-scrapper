@@ -49,10 +49,13 @@ public class SimpleCardList implements CardList {
     }
 
     @Override
-    public void addCardToList(Card card) throws SQLException {
+    public void addCardToList(Card card) {
 //        if (!databaseService.cardIsPresent(card.getCardData().cardName())) {
 //            databaseService.addCard(card.getCardData().cardName());
 //        }
+        if (card == null) {
+            return;
+        }
 
         String sql = """
             INSERT INTO listcards (list_id, multiverse_id) VALUES (?::integer, ?::integer);
@@ -63,6 +66,9 @@ public class SimpleCardList implements CardList {
             preparedStatement.setInt(2, card.getCardData().multiverseId());
 
             preparedStatement.execute();
+        }
+        catch (SQLException e){
+            throw new RuntimeException(e);
         }
     }
 

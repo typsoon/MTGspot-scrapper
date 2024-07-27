@@ -70,7 +70,8 @@ public class SimpleDatabaseService implements DatabaseService {
         log.debug("After pinging api");
 
         if (cardData == null) {
-            throw new RuntimeException("Card not found in MTG database: " + cardName);
+            log.info("Card not found: {}", cardName);
+            return null;
         }
 
         String checkCardSql = "SELECT * FROM Cards WHERE multiverse_id = ?::integer;";
@@ -78,7 +79,8 @@ public class SimpleDatabaseService implements DatabaseService {
             preparedStatement.setInt(1, cardData.multiverseId());
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
                 if (resultSet.next()) {
-                    throw new SQLException("This card is already present in the database");
+                    log.info("Card already exists in MTG database: {}", cardName);
+                    return getCard(cardName);
                 }
             }
         }
@@ -131,7 +133,7 @@ public class SimpleDatabaseService implements DatabaseService {
     }
 
     @Override
-    public CardList addList(String listName) throws SQLException {
+    public CardList addList(String listName) {
         String sql = """
             INSERT INTO Lists(list_name) VALUES (?::varchar) RETURNING list_id;
         """;
@@ -145,24 +147,47 @@ public class SimpleDatabaseService implements DatabaseService {
                 }
             }
         }
+        catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
         return null;
     }
 
     @Override
     public boolean deleteList(String listName) throws SQLException {
         String sql = """
-            DELETE FROM Lists WHERE list_name = ?::varchar RETURNING list_id;
+            SELECT list_id FROM Lists INNER JOIN ListCards USING (list_id) WHERE list_name=?::varchar;
         """;
 
-        int listId = -1;
-        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+        int listId;
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)){
             preparedStatement.setString(1, listName);
-
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
                 if (resultSet.next()) {
-                    listId = resultSet.getInt(1);
+                    listId = resultSet.getInt("list_id");
+                }
+                else {
+                    log.info("List not found: {}", listName);
+                    return false;
                 }
             }
+        }
+
+        sql = """
+            DELETE FROM ListCards WHERE list_id = ?::integer;
+            DELETE FROM Lists WHERE list_id = ?::integer;
+        """;
+
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.setInt(1, listId);
+            preparedStatement.setInt(2, listId);
+
+//            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+//                if (resultSet.next()) {
+//                    listId = resultSet.getInt(1);
+//                }
+//            }
+            preparedStatement.executeUpdate();
         }
 
         if (listId == -1) {
@@ -183,7 +208,7 @@ public class SimpleDatabaseService implements DatabaseService {
     }
 
     @Override
-    public Card getCard(String cardName) throws SQLException {
+    public Card getCard(String cardName) {
         if (loadedCards.containsKey(cardName)) {
             return loadedCards.get(cardName);
         }
@@ -201,6 +226,9 @@ public class SimpleDatabaseService implements DatabaseService {
                 }
                 return cards.isEmpty() ? null : cards.iterator().next();
             }
+        }
+        catch (SQLException e) {
+            throw new RuntimeException(e);
         }
     }
 

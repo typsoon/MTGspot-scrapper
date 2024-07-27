@@ -13,4 +13,5 @@ public class Addresses {
 
     public static final String LIST_RIGHT_PANE = utilsFolderPath + "list-right-pane.fxml";
     public static final String CARD_RIGHT_PANE = utilsFolderPath + "card-right-pane.fxml";
+    public static final String TEXT_CAPTURE_VBOX = utilsFolderPath + "text-capture-vbox.fxml";
 }

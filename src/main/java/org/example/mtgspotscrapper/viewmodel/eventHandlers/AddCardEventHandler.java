@@ -5,11 +5,15 @@ import org.example.mtgspotscrapper.view.viewEvents.eventTypes.AddCardEvent;
 import org.example.mtgspotscrapper.viewmodel.Card;
 import org.example.mtgspotscrapper.viewmodel.CardList;
 import org.example.mtgspotscrapper.viewmodel.DatabaseService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.sql.SQLException;
 
 public class AddCardEventHandler extends MyEventHandler<AddCardEvent> {
+    private static final Logger addEventLogger = LoggerFactory.getLogger(AddCardEventHandler.class);
+
     public AddCardEventHandler(DatabaseService databaseService) {
         super(databaseService);
     }
@@ -27,8 +31,9 @@ public class AddCardEventHandler extends MyEventHandler<AddCardEvent> {
             if (cardList != null) {
                 cardList.addCardToList(addedCard);
             }
-            
-            myEventLogger.info("Card added: {}, List: {}", cardName, addCardEvent.addCardData.cardList());
+
+            if (addedCard != null)
+                addEventLogger.info("Card added: {}, List: {}", cardName, addCardEvent.addCardData.cardList());
         } catch (SQLException | IOException e) {
             throw new RuntimeException(e);
         }

@@ -16,10 +16,13 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class CardInfoScrapperImpl implements CardInfoScrapper {
     public static final Logger scrapperLogger = LoggerFactory.getLogger(CardInfoScrapperImpl.class);
-    private static final ExecutorService executorService = Executors.newCachedThreadPool();
+    private static final ExecutorService executorService = Executors.newFixedThreadPool(30);
+//    private static final ExecutorService executorService = Executors.newCachedThreadPool();
 
     @Override
     public CompletableFuture<Double> getCardPrice(String cardName) {
@@ -36,28 +39,28 @@ public class CardInfoScrapperImpl implements CardInfoScrapper {
                 // Navigate to the page with the form
                 driver.get("https://mtgspot.pl/");
 
-                Thread.sleep(250);
+                Thread.sleep(500);
 
                 // Wait and click the search lens icon
                 String searchLensXPath = "//*[@id=\"__nuxt\"]/div/div[1]/header/div/div/div[2]/ul/li[1]";
                 WebElement searchLens = wait.until(ExpectedConditions.elementToBeClickable(By.xpath(searchLensXPath)));
                 searchLens.click();
 
-                Thread.sleep(250);
+                Thread.sleep(1000);
 
                 // Wait for the search field to be visible and interactable
                 String searchFieldId = "advancedSearch";
                 WebElement searchField = wait.until(ExpectedConditions.visibilityOfElementLocated(By.id(searchFieldId)));
                 searchField.sendKeys(cardName);
 
-                Thread.sleep(250);
+                Thread.sleep(1000);
 
                 // Wait and click the submit button
                 String submitButtonXPath = "//*[@id=\"__nuxt\"]/div/div[1]/header/div/div/div[1]/form/div/div/div[2]/div[7]/button/div[1]";
                 WebElement submitButton = wait.until(ExpectedConditions.elementToBeClickable(By.xpath(submitButtonXPath)));
                 submitButton.click();
 
-                Thread.sleep(750);
+                Thread.sleep(1000);
 
                 String showFiltersXPath = "//*[@id=\"__nuxt\"]/div/div[1]/div[2]/div[3]";
                 WebElement showFilters = wait.until(ExpectedConditions.elementToBeClickable(By.xpath(showFiltersXPath)));
@@ -77,7 +80,7 @@ public class CardInfoScrapperImpl implements CardInfoScrapper {
                 Select sortBy = new Select(sortBySelectField);
                 sortBy.selectByVisibleText("Cena rosnąco");
 
-                Thread.sleep(4000);
+                Thread.sleep(6000);
 
                 WebElement elementsTable = driver.findElement(By.xpath("//*[@id=\"__nuxt\"]/div/div[1]/div[2]/div[1]"));
                 List<WebElement> elements = elementsTable.findElements(By.tagName("a"));
@@ -91,7 +94,14 @@ public class CardInfoScrapperImpl implements CardInfoScrapper {
 //                for (String attribute : data) {
 ////                    System.out.print(attribute + ", ");
 //                }
-                    if (data.length >= 5 && data[0].equals(cardName)) {
+                    String scrappedName = data[0];
+
+                    Pattern nameV1 = Pattern.compile("^" + cardName+ "(\\s\\(.*\\))?$");
+                    Matcher matcher = nameV1.matcher(scrappedName);
+
+//                    scrapperLogger.info("Does it match: {}, str {}, card name: {}", matcher.matches(), scrappedName, cardName);
+
+                    if (data.length >= 5 && (scrappedName.equals(cardName) || matcher.matches())) {
                         minPrice = Math.min(minPrice, Double.parseDouble(data[4].substring(0, data[4].length() - 2)));
                     }
                 }

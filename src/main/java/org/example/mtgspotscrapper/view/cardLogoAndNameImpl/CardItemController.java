@@ -57,7 +57,7 @@ public class CardItemController extends CardLogoAndNameController {
         try {
             displayPrice(card.getActCardPrice());
 
-            log.debug("Is done: {}, multiverseId: {}, hash: {}", card.getFutureCardPrice().isDone(), card.getCardData().multiverseId(), card.getFutureCardPrice().hashCode());
+//            log.debug("Is done: {}, multiverseId: {}, hash: {}", card.getFutureCardPrice().isDone(), card.getCardData().multiverseId(), card.getFutureCardPrice().hashCode());
             if (!card.getFutureCardPrice().isDone()) {
                 card.getFutureCardPrice()
                         .thenComposeAsync(cardPrice -> {
