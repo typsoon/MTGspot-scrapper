@@ -1,5 +1,7 @@
 package org.example.mtgspotscrapper.model.scrapper;
 
+import java.util.concurrent.CompletableFuture;
+
 public interface CardInfoScrapper {
-    Double getCardPrice(String cardName);
+    CompletableFuture<Double> getCardPrice(String cardName);
 }

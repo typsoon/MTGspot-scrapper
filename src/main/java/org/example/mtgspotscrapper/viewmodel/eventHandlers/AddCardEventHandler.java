@@ -19,6 +19,7 @@ public class AddCardEventHandler extends MyEventHandler<AddCardEvent> {
         try {
             String cardName = addCardEvent.getAddCardData().cardName();
             Card addedCard = databaseService.getCard(cardName);
+
             if (addedCard == null)
                 addedCard = databaseService.addCard(addCardEvent.getAddCardData().cardName());
 
@@ -26,7 +27,7 @@ public class AddCardEventHandler extends MyEventHandler<AddCardEvent> {
             if (cardList != null) {
                 cardList.addCardToList(addedCard);
             }
-
+            
             myEventLogger.info("Card added: {}, List: {}", cardName, addCardEvent.addCardData.cardList());
         } catch (SQLException | IOException e) {
             throw new RuntimeException(e);

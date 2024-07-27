@@ -1,27 +1,32 @@
 package org.example.mtgspotscrapper.model;
 
+import org.example.mtgspotscrapper.model.cardImpl.SimpleCard;
 import org.example.mtgspotscrapper.model.mtgapi.MtgApiService;
 import org.example.mtgspotscrapper.model.mtgapi.SimpleMtgApiService;
 import org.example.mtgspotscrapper.model.records.CardData;
 import org.example.mtgspotscrapper.model.records.ListData;
+import org.example.mtgspotscrapper.model.utils.ResultProcessor;
 import org.example.mtgspotscrapper.viewmodel.Card;
 import org.example.mtgspotscrapper.viewmodel.CardList;
 import org.example.mtgspotscrapper.viewmodel.DatabaseService;
+import org.example.mtgspotscrapper.viewmodel.DownloaderService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.*;
 import java.sql.*;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 public class SimpleDatabaseService implements DatabaseService {
     private static final Logger log = LoggerFactory.getLogger(SimpleDatabaseService.class);
     private final Connection connection;
+    private final DownloaderService downloaderService;
+    private final ResultProcessor resultProcessor = new ResultProcessor();
+    private final ConcurrentMap<String, Card> loadedCards = new ConcurrentHashMap<>();
 
     @Override
     public Collection<CardList> getAllLists() throws SQLException {
@@ -59,7 +64,10 @@ public class SimpleDatabaseService implements DatabaseService {
     @Override
     public Card addCard(String cardName) throws SQLException, IOException {
         MtgApiService mtgApiService = new SimpleMtgApiService();
+
+        log.debug("Before pinging api");
         CardData cardData = mtgApiService.getCardData(cardName);
+        log.debug("After pinging api");
 
         if (cardData == null) {
             throw new RuntimeException("Card not found in MTG database: " + cardName);
@@ -75,21 +83,51 @@ public class SimpleDatabaseService implements DatabaseService {
             }
         }
 
-        String downloadedImageAddress = downloadImage(cardData);
+//        TODO: make it so the download is handled by another thread
+        CompletableFuture<String> downloadedImageAddress;
+        try {
+            downloadedImageAddress = downloaderService.downloadCardImage(new URI(cardData.imageUrl()).toURL(), cardData.multiverseId());
+        } catch (URISyntaxException e) {
+            log.error("Inconsistent data in database: ", e);
+            throw new RuntimeException(e);
+        }
 
         String insertCardSql = """
-            INSERT INTO Cards(multiverse_id, card_name, previous_price, actual_price, image_address)
-            VALUES (?::integer, ?::varchar, null, null, ?::varchar);
+            INSERT INTO Cards(multiverse_id, card_name, image_url)
+            VALUES (?::integer, ?::varchar, ?::varchar);
         """;
 
         try (PreparedStatement preparedStatement = connection.prepareStatement(insertCardSql)) {
             preparedStatement.setInt(1, cardData.multiverseId());
             preparedStatement.setString(2, cardData.cardName());
-            preparedStatement.setString(3, downloadedImageAddress);
-            preparedStatement.execute();
+            preparedStatement.setString(3, cardData.imageUrl());
+            if (preparedStatement.executeUpdate() == 0)
+                throw new SQLException("Failed to insert card");
         }
 
-        return new SimpleCard(connection, cardData, downloadedImageAddress);
+        downloadedImageAddress.thenAcceptAsync(imageAddress -> {
+            String sql = """
+                INSERT INTO LocalAddresses(multiverse_id, local_address) VALUES (?::integer, ?::varchar);
+            """;
+
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setInt(1, cardData.multiverseId());
+                preparedStatement.setString(2, imageAddress);
+
+                if (preparedStatement.executeUpdate() == 0)
+                    throw new RuntimeException("Failed to insert local address");
+            }
+            catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }).exceptionally(throwable -> {
+            log.error("Failed to insert card", throwable);
+            throw new RuntimeException("Failed to insert card", throwable);
+        });
+
+        Card adedCard = new SimpleCard(connection, cardData, downloadedImageAddress);
+        loadedCards.put(cardName, adedCard);
+        return adedCard;
     }
 
     @Override
@@ -112,8 +150,7 @@ public class SimpleDatabaseService implements DatabaseService {
 
     @Override
     public boolean deleteList(String listName) throws SQLException {
-        String sql =
-        """
+        String sql = """
             DELETE FROM Lists WHERE list_name = ?::varchar RETURNING list_id;
         """;
 
@@ -132,8 +169,7 @@ public class SimpleDatabaseService implements DatabaseService {
             return false;
         }
 
-        sql =
-        """
+        sql = """
             DELETE FROM ListCards WHERE list_id = ?::integer;
         """;
 
@@ -148,109 +184,44 @@ public class SimpleDatabaseService implements DatabaseService {
 
     @Override
     public Card getCard(String cardName) throws SQLException {
+        if (loadedCards.containsKey(cardName)) {
+            return loadedCards.get(cardName);
+        }
+
         String sql = """
-            SELECT * FROM Cards WHERE card_name = ?::varchar;
+            SELECT * FROM FullCardData WHERE card_name = ?::varchar;
         """;
 
         try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
             preparedStatement.setString(1, cardName);
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
-                if (resultSet.next()) {
-                    CardData cardData = new CardData(resultSet.getInt("multiverse_id"),
-                            resultSet.getString("card_name")
-                            , null);
-                    return new SimpleCard(connection, cardData, resultSet.getString("image_address"));
+                Collection<Card> cards = resultProcessor.getCardsFromResultSet(resultSet, connection);
+                if (cards.size() > 1) {
+                    throw new RuntimeException("Inconsistent data in database, collection of cards with card_name ==  " + cardName + ":" + cards);
                 }
-                else return null;
+                return cards.isEmpty() ? null : cards.iterator().next();
             }
         }
     }
 
     @Override
     public Collection<Card> getAllCardsData() throws SQLException {
-        String sql = "SELECT * FROM cards";
+        String sql = "SELECT * FROM Cards";
         try (Statement statement = connection.createStatement();
              ResultSet resultSet = statement.executeQuery(sql)) {
-            return resultSetToCardData(resultSet);
+            return resultProcessor.getCardsFromResultSet(resultSet, connection);
         }
     }
 
-    private Collection<Card> resultSetToCardData(ResultSet resultSet) throws SQLException {
-        Collection<Card> answer = new ArrayList<>();
-        while (resultSet.next()) {
-            answer.add(new SimpleCard(connection,
-                    new CardData(resultSet.getInt("multiverse_id"), resultSet.getString("card_name"), null),
-                    resultSet.getString("image_address")));
-        }
-        return answer;
-    }
-
-    public SimpleDatabaseService(String url, String user, String password) throws SQLException {
+    public SimpleDatabaseService(String url, String user, String password, DownloaderService downloaderService) throws SQLException {
+        this.downloaderService = downloaderService;
         this.connection = DriverManager.getConnection(url, user, password);
     }
 
-    protected String downloadImage(CardData cardData) throws IOException {
-        URL imageURL;
-        try {
-            imageURL = new URI(cardData.imageUrl()).toURL();
-        } catch (URISyntaxException | MalformedURLException e) {
-            throw new RuntimeException("Inconsistent data in database:", e);
-        }
-
-        HttpURLConnection httpURLConnection = (HttpURLConnection) imageURL.openConnection();
-        int responseCode = httpURLConnection.getResponseCode();
-        while (responseCode == HttpURLConnection.HTTP_MOVED_TEMP || responseCode == HttpURLConnection.HTTP_MOVED_PERM) {
-            String newUrl = httpURLConnection.getHeaderField("Location");
-            httpURLConnection.disconnect();
-            try {
-                imageURL = new URI(newUrl).toURL();
-            } catch (Exception e) {
-                log.error("Problems on wizards side: {}", Arrays.toString(e.getStackTrace()));
-                throw new RuntimeException("Problems on wizards side:", e);
-            }
-            httpURLConnection = (HttpURLConnection) imageURL.openConnection();
-            responseCode = httpURLConnection.getResponseCode();
-        }
-
-        String contentType = httpURLConnection.getContentType();
-        String fileExtension = getFileExtension(contentType);
-        if (fileExtension == null) {
-            throw new IOException("Unsupported content type: " + contentType);
-        }
-
-        File directory = new File("downloaded images");
-        if (!directory.exists()) {
-            //noinspection ResultOfMethodCallIgnored
-            directory.mkdirs();
-        }
-
-        File file = new File(directory, "card" + cardData.multiverseId() + "." + fileExtension);
-
-        try (InputStream inputStream = httpURLConnection.getInputStream()) {
-            BufferedImage image = ImageIO.read(inputStream);
-            if (image != null) {
-                ImageIO.write(image, fileExtension, file);
-                return file.getAbsolutePath();
-            } else {
-                throw new IOException("Failed to load image from URL: " + imageURL);
-            }
-        } finally {
-            httpURLConnection.disconnect();
-        }
-    }
-
-    private static String getFileExtension(String contentType) {
-        if (contentType == null) return null;
-        return switch (contentType) {
-            case "image/jpeg", "image/png" -> "png";
-            case "image/gif" -> "gif";
-            default -> null;
-        };
-    }
 
     public static void main(String[] args) {
         try {
-            DatabaseService databaseService = new SimpleDatabaseService("jdbc:postgresql://localhost/scrapper", "scrapper", "aaa");
+            DatabaseService databaseService = new SimpleDatabaseService("jdbc:postgresql://localhost/scrapper", "scrapper", "aaa", new SimpleDownloaderService());
             log.debug(databaseService.getAllLists().toString());
             log.debug(databaseService.getAllCardsData().toString());
             log.debug(databaseService.getCardList("test list").toString());

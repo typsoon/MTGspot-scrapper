@@ -12,7 +12,6 @@ public interface DatabaseService {
     CardList addList(String listName) throws SQLException, IOException;
 
     boolean deleteList(String listName) throws SQLException;
-
     Card getCard(String cardName) throws SQLException;
 
     Collection<Card> getAllCardsData() throws SQLException;

@@ -1,22 +1,23 @@
 package org.example.mtgspotscrapper.view.cardLogoAndNameImpl;
 
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
 import javafx.scene.paint.Color;
-import org.example.mtgspotscrapper.App;
 import org.example.mtgspotscrapper.model.records.CardPrice;
 import org.example.mtgspotscrapper.view.CardLogoAndNameController;
 import org.example.mtgspotscrapper.view.ScreenManager;
 import org.example.mtgspotscrapper.viewmodel.Card;
+import org.example.mtgspotscrapper.viewmodel.DownloaderService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.net.*;
 import java.sql.SQLException;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 public class CardItemController extends CardLogoAndNameController {
     private static final Logger log = LoggerFactory.getLogger(CardItemController.class);
@@ -26,54 +27,73 @@ public class CardItemController extends CardLogoAndNameController {
     @FXML
     private Label prevPrice;
 
-    public CardItemController(Card card, ScreenManager screenManager) {
-        super(screenManager);
+    public CardItemController(Card card, ScreenManager screenManager, DownloaderService downloaderService) {
+        super(screenManager, downloaderService);
         this.card = card;
     }
 
     @Override
     protected void initialize() {
-        imageView.setImage(new Image("file:" + card.getLocalImageAddress()));
-
-        Label actPrice = label;
-
-        App.logger.debug("Card: {}", card);
+//        log.debug("before");
+        try {
+            card.getDownloadedImageAddress().thenAcceptAsync(imageAddress -> {
+                if (imageAddress != null) {
+                    String imagePath = "file:" + imageAddress;
+//                    log.debug("Image path: {}", "file:" + imageAddress);
+                    // Ensure UI updates happen on the JavaFX Application Thread
+                    Platform.runLater(() -> imageView.setImage(new Image(imagePath)));
+                } else {
+                    log.error("Image address is null. Failed to download image.");
+                }
+            }).exceptionally(ex -> {
+                log.error("Error loading image", ex);
+                return null;
+            });
+        } catch (ExecutionException | InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+//        log.debug("after");
 
         try {
-            CardPrice cardPrice = card.getCardPrice();
+            displayPrice(card.getActCardPrice());
 
-            prevPrice.setText(cardPrice.prevPrice() != 0.0 ? String.valueOf(cardPrice.prevPrice()) : "-" );
-            actPrice.setText(cardPrice.actPrice() != 0.0 ? String.valueOf(cardPrice.actPrice()) : "-" );
-
-            vBox.setBackground(new Background(new BackgroundFill(
-                    switch (card.getAvailability()) {
-                        case AVAILABLE_PREV_UNAVAILABLE -> Color.LIGHTGREEN;
-                        case AVAILABLE_PREV_AVAILABLE -> Color.LIGHTYELLOW;
-                        case UNAVAILABLE_PREV_AVAILABLE, UNAVAILABLE_PREV_UNAVAILABLE -> Color.rgb(255, 192,192);
-                    }
-                    , null, null)));
+            log.debug("Is done: {}, multiverseId: {}, hash: {}", card.getFutureCardPrice().isDone(), card.getCardData().multiverseId(), card.getFutureCardPrice().hashCode());
+            if (!card.getFutureCardPrice().isDone()) {
+                card.getFutureCardPrice()
+                        .thenComposeAsync(cardPrice -> {
+                            // Display the card price on the JavaFX Application Thread
+                            Platform.runLater(() -> {
+                                try {
+                                    displayPrice(cardPrice);
+                                } catch (SQLException e) {
+                                    throw new RuntimeException(e);
+                                }
+                            });
+                            return CompletableFuture.completedFuture(null); // Return a completed future to continue the chain
+                        })
+                        .exceptionally(throwable -> {
+                            log.error("Error loading price", throwable);
+                            throw new RuntimeException(throwable);
+                        });
+            }
         } catch (SQLException e) {
             log.error("Couldn't query database", e);
             throw new RuntimeException(e);
         }
     }
 
+    final void displayPrice(CardPrice cardPrice) throws SQLException {
+        final Label actPrice = label;
 
+        prevPrice.setText(cardPrice.prevPrice() != 0.0 ? String.valueOf(cardPrice.prevPrice()) : "-" );
+        actPrice.setText(cardPrice.actPrice() != 0.0 ? String.valueOf(cardPrice.actPrice()) : "-" );
 
-    public static void main(String[] args) throws IOException, URISyntaxException {
-        URL url = new URI("http://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=129626&type=card").toURL();
-        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-//        connection.setInstanceFollowRedirects(true);
-
-        while (connection.getResponseCode() == HttpURLConnection.HTTP_MOVED_TEMP ||
-                connection.getResponseCode() == HttpURLConnection.HTTP_MOVED_PERM) {
-            String newUrl = connection.getHeaderField("Location");
-            connection.disconnect();
-            url = new URI(newUrl).toURL();
-            connection = (HttpURLConnection) url.openConnection();
-        }
-
-        App.logger.debug(connection.getResponseMessage());
-        App.logger.debug(connection.getContentType());
+        vBox.setBackground(new Background(new BackgroundFill(
+                switch (card.getAvailability()) {
+                    case AVAILABLE_PREV_UNAVAILABLE -> Color.LIGHTGREEN;
+                    case AVAILABLE_PREV_AVAILABLE -> Color.LIGHTYELLOW;
+                    case UNAVAILABLE_PREV_AVAILABLE, UNAVAILABLE_PREV_UNAVAILABLE -> Color.rgb(255, 192,192);
+                }
+                , null, null)));
     }
 }

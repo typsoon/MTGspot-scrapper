@@ -38,10 +38,10 @@ public class CardRightPane extends AbstractRightPane {
     protected void initialize() {
         CheckComboBox<String> cb = new CheckComboBox<>();
         cb.setTitle("Availability");
-        cb.getItems().add("Available");
-        cb.getItems().add("Previously Available");
-        cb.getItems().add("Not available, previously available");
-        cb.getItems().add("Not available");
+        cb.getItems().add("Available, previously unavailable");
+        cb.getItems().add("Available, previously available");
+        cb.getItems().add("Unavailable, previously available");
+        cb.getItems().add("Unavailable, previously unavailable");
         gridPane.add(cb, 2, 3);
 
         addLabel.setCursor(Cursor.HAND);

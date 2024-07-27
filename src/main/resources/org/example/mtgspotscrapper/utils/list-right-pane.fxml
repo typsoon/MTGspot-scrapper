@@ -15,7 +15,8 @@
 <!--suppress JavaFxDefaultTag -->
 <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="372.0" prefWidth="410.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1">
    <children>
-      <VBox alignment="TOP_CENTER" layoutX="18.0" layoutY="20.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="310.0" prefWidth="375.0" spacing="20.0" style="-fx-background-color: #fcecec;">
+<!--      <VBox alignment="TOP_CENTER" layoutX="18.0" layoutY="20.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="310.0" prefWidth="375.0" spacing="20.0" style="-fx-background-color: #fcecec;">-->
+      <VBox alignment="TOP_CENTER" layoutX="18.0" layoutY="20.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="310.0" prefWidth="375.0" spacing="20.0" style="-fx-background-color: #ADE8F4;">
          <children>
             <GridPane fx:id="gridPane" alignment="CENTER" prefHeight="149.0" prefWidth="476.0">
                <columnConstraints>

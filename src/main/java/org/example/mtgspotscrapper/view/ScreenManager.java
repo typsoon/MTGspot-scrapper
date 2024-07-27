@@ -9,6 +9,7 @@ import javafx.scene.layout.*;
 import org.example.mtgspotscrapper.App;
 import org.example.mtgspotscrapper.view.cardLogoAndNameImpl.CardItemController;
 import org.example.mtgspotscrapper.view.cardLogoAndNameImpl.ListItemController;
+import org.example.mtgspotscrapper.viewmodel.DownloaderService;
 import org.example.mtgspotscrapper.viewmodel.eventHandlers.*;
 import org.example.mtgspotscrapper.view.viewEvents.eventTypes.*;
 import org.example.mtgspotscrapper.view.rightPanesImplementations.CardRightPane;
@@ -26,11 +27,13 @@ public class ScreenManager {
 
     private final CardRightPane cardRightPaneController;
     private final ListRightPane listRightPaneController;
+    private final DownloaderService downloaderService;
 
-    ScreenManager(DatabaseService databaseService) throws IOException {
+    ScreenManager(DatabaseService databaseService, DownloaderService downloaderService) throws IOException {
         this.databaseService = databaseService;
         listRightPaneController = new ListRightPane(Addresses.LIST_RIGHT_PANE, databaseService, this);
         cardRightPaneController = new CardRightPane(Addresses.CARD_RIGHT_PANE, databaseService, this);
+        this.downloaderService = downloaderService;
     }
 
     @SuppressWarnings("unused")
@@ -77,7 +80,7 @@ public class ScreenManager {
                     continue;
                 }
                 FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource(Addresses.LIST_INFO));
-                fxmlLoader.setController(new ListItemController(cardList, this));
+                fxmlLoader.setController(new ListItemController(cardList, this, downloaderService));
 
                 cardsFlowPane.getChildren().add(fxmlLoader.load());
             }
@@ -105,7 +108,7 @@ public class ScreenManager {
             cardsFlowPane.getChildren().clear();
             for (var cardData : cardList.getCards()) {
                 FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource(Addresses.CARD_INFO));
-                fxmlLoader.setController(new CardItemController(cardData, this));
+                fxmlLoader.setController(new CardItemController(cardData, this, downloaderService));
 
                 cardsFlowPane.getChildren().add(fxmlLoader.load());
             }

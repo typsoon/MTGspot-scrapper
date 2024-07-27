@@ -8,8 +8,10 @@ import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import org.example.mtgspotscrapper.App;
+import org.example.mtgspotscrapper.model.SimpleDownloaderService;
 import org.example.mtgspotscrapper.viewmodel.DatabaseService;
 import org.example.mtgspotscrapper.model.SimpleDatabaseService;
+import org.example.mtgspotscrapper.viewmodel.DownloaderService;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -23,8 +25,8 @@ public class LoginSceneController {
         this.primaryStage = primaryStage;
     }
 
-    private void displayMainStage(DatabaseService databaseService) throws IOException {
-        ScreenManager screenManager = new ScreenManager(databaseService);
+    private void displayMainStage(DatabaseService databaseService, DownloaderService downloaderService) throws IOException {
+        ScreenManager screenManager = new ScreenManager(databaseService, downloaderService);
         FXMLLoader managerLoader = new FXMLLoader(App.class.getResource(Addresses.SCREEN_MANAGER));
         managerLoader.setController(screenManager);
 
@@ -32,9 +34,9 @@ public class LoginSceneController {
         primaryStage.show();
     }
 
-    private DatabaseService captureDataAndTryToLogIn() {
+    private DatabaseService captureDataAndTryToLogIn(DownloaderService downloaderService) {
         try {
-            return new SimpleDatabaseService("jdbc:postgresql://localhost/scrapper", "scrapper", "aaa");
+            return new SimpleDatabaseService("jdbc:postgresql://localhost/", usernameField.getText(), passwordField.getText(), downloaderService);
         }
         catch (Exception e) {
             return null;
@@ -47,16 +49,18 @@ public class LoginSceneController {
 
             try (InputStream stream = App.class.getResourceAsStream("localData/credentials.properties")) {
                 DatabaseService databaseService;
+                DownloaderService downloaderService;
                 try {
                     credentials.load(stream);
 
-                    databaseService = new SimpleDatabaseService("jdbc:postgresql://localhost/scrapper", credentials.getProperty("username"), credentials.getProperty("password"));
+                    downloaderService = new SimpleDownloaderService();
+                    databaseService = new SimpleDatabaseService("jdbc:postgresql://localhost/", credentials.getProperty("username"), credentials.getProperty("password"), downloaderService);
                 }
                 catch (IOException e) {
                     return false;
                 }
 
-                displayMainStage(databaseService);
+                displayMainStage(databaseService, downloaderService);
                 return true;
             }
         }
@@ -69,10 +73,11 @@ public class LoginSceneController {
     @FXML
     private void initialize() {
         logInButton.setOnAction(event -> {
-            DatabaseService databaseService = captureDataAndTryToLogIn();
+            DownloaderService downloaderService = new SimpleDownloaderService();
+            DatabaseService databaseService = captureDataAndTryToLogIn(downloaderService);
             if (databaseService != null) {
                 try {
-                    displayMainStage(databaseService);
+                    displayMainStage(databaseService, downloaderService);
                 } catch (IOException e) {
                     throw new RuntimeException("Failed to load screenManager", e);
                 }
