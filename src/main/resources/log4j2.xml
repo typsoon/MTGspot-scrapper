@@ -1,11 +1,23 @@
 <Configuration status="WARN">
+<!--    <properties>-->
+<!--        <fileName>src/main/resources/logs</fileName>-->
+<!--    </properties>-->
+
     <Appenders>
+<!--        <File name="File" fileName="src/main/resources/logs">-->
+        <File name="File" fileName="src/main/resources/logs">
+            <PatternLayout>
+                <pattern>%d %p %C{1.} [%t] %m%n</pattern>
+            </PatternLayout>
+        </File>
+
         <Console name="Console" target="SYSTEM_OUT">
             <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
         </Console>
     </Appenders>
     <Loggers>
         <Root level="debug">
+            <AppenderRef ref="File"/>
             <AppenderRef ref="Console"/>
         </Root>
 <!--        <Root level="error">-->

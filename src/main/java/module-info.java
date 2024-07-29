@@ -13,10 +13,13 @@ module org.example.mtgspotscrapper {
     requires javasdk;
     requires org.checkerframework.checker.qual;
     requires org.controlsfx.controls;
+    requires org.jooq;
+//    requires org.apache.commons.csv;
 
     opens org.example.mtgspotscrapper.view to javafx.fxml;
 
     exports org.example.mtgspotscrapper;
+    exports org.example.mtgspotscrapper.model.databaseClasses.tables.records;
     opens org.example.mtgspotscrapper.view.rightPanesImplementations to javafx.fxml;
     opens org.example.mtgspotscrapper.view.cardLogoAndNameImpl to javafx.fxml;
 }

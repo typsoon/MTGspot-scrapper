@@ -1,16 +1,9 @@
 package org.example.mtgspotscrapper.model.mtgapi;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URI;
-import java.net.URL;
-import java.net.URLEncoder;
+import java.io.*;
+import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.function.Consumer;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import io.magicthegathering.javasdk.api.CardAPI;
 import io.magicthegathering.javasdk.resource.Card;
@@ -18,11 +11,8 @@ import org.example.mtgspotscrapper.App;
 import org.example.mtgspotscrapper.model.records.CardData;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class SimpleMtgApiService implements MtgApiService {
-    private static final Logger log = LoggerFactory.getLogger(SimpleMtgApiService.class);
 
     @Override
     public CardData getCardData(String cardName) {
@@ -127,20 +117,20 @@ public class SimpleMtgApiService implements MtgApiService {
     }
 
     public static void main(String[] args) {
-        String cardName = "Assassin's Trophy";
-
-        Consumer<String> test = what -> {
-            Pattern nameV1 = Pattern.compile("^" + cardName+ "(\\s\\(.*\\))?$");
-            Matcher matcher = nameV1.matcher(what);
-
-            log.info("Equals: {}, matches: {}", what.equals(cardName), matcher.matches());
-        };
-
-        test.accept("Assassin's Trophy (V.2)");
-        test.accept("Assassin's Trophy (v.1)");
-        test.accept("Assassin's Trophy (V.4)");
-        test.accept("Assassin's Trophy Token");
-        test.accept("Assassin's Trophy");
+//        String cardName = "Assassin's Trophy";
+//
+//        Consumer<String> test = what -> {
+//            Pattern nameV1 = Pattern.compile("^" + cardName+ "(\\s\\(.*\\))?$");
+//            Matcher matcher = nameV1.matcher(what);
+//
+//            log.info("Equals: {}, matches: {}", what.equals(cardName), matcher.matches());
+//        };
+//
+//        test.accept("Assassin's Trophy (V.2)");
+//        test.accept("Assassin's Trophy (v.1)");
+//        test.accept("Assassin's Trophy (V.4)");
+//        test.accept("Assassin's Trophy Token");
+//        test.accept("Assassin's Trophy");
 
 //        MtgApiService mtgApiService = new SimpleMtgApiService();
 //

@@ -6,15 +6,16 @@ import org.example.mtgspotscrapper.model.scrapper.CardInfoScrapper;
 import org.example.mtgspotscrapper.model.scrapper.CardInfoScrapperImpl;
 import org.example.mtgspotscrapper.viewmodel.Availability;
 import org.example.mtgspotscrapper.viewmodel.Card;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.jooq.DSLContext;
 
-import java.sql.*;
+import java.math.BigDecimal;
+import java.util.Objects;
 import java.util.concurrent.*;
 
+import static org.example.mtgspotscrapper.model.databaseClasses.Tables.*;
+
 public class SimpleCard implements Card {
-    private static final Logger log = LoggerFactory.getLogger(SimpleCard.class);
-    private final Connection connection;
+    private final DSLContext dslContext;
 
     private final CardData cardData;
 
@@ -28,8 +29,8 @@ public class SimpleCard implements Card {
 
     private final FutureCardPriceWrapper futureCardPriceWrapper;
 
-    public SimpleCard(Connection connection, CardData cardData, CompletableFuture<String> downloadedImageAddress) {
-        this.connection = connection;
+    public SimpleCard(CardData cardData, CompletableFuture<String> downloadedImageAddress, DSLContext dslContext) {
+        this.dslContext = dslContext;
         this.cardData = cardData;
 
         if (!downloadedImageAddresses.containsKey(cardData.multiverseId())) {
@@ -56,27 +57,22 @@ public class SimpleCard implements Card {
     }
 
     @Override
-    public CardPrice getActCardPrice() throws SQLException {
-        String sql = """
-            SELECT previous_price, actual_price FROM cards WHERE multiverse_id = ?::integer;
-        """;
+    public CardPrice getActCardPrice() {
+        return Objects.requireNonNull(dslContext.select(CARDS.PREVIOUS_PRICE, CARDS.ACTUAL_PRICE)
+                        .from(CARDS)
+                        .where(CARDS.MULTIVERSE_ID.eq(cardData.multiverseId()))
+                        .fetchOne())
+                .map(priceRecord -> new CardPrice(
+                        nullsafeBigDecToDouble(priceRecord.getValue(CARDS.PREVIOUS_PRICE)),
+                        nullsafeBigDecToDouble(priceRecord.getValue(CARDS.ACTUAL_PRICE))));
+    }
 
-        try(PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-            preparedStatement.setInt(1, cardData.multiverseId());
-
-            try (ResultSet resultSet = preparedStatement.executeQuery()){
-                if (resultSet.next()) {
-                    return new CardPrice(resultSet.getDouble("previous_price"), resultSet.getDouble("actual_price"));
-                }
-                else {
-                    throw new RuntimeException("No price found for multiverseId " + cardData.multiverseId());
-                }
-            }
-        }
+    private static double nullsafeBigDecToDouble(BigDecimal bigDecimal) {
+        return bigDecimal == null ? 0 : bigDecimal.doubleValue();
     }
 
     @Override
-    public final CompletableFuture<CardPrice> getFutureCardPrice() throws SQLException {
+    public final CompletableFuture<CardPrice> getFutureCardPrice() {
         if (futureCardPriceWrapper.getFuturePrice() == null) {
             futureCardPriceWrapper.setFuturePrice(CompletableFuture.completedFuture(getActCardPrice()));
         }
@@ -84,6 +80,7 @@ public class SimpleCard implements Card {
         return futureCardPriceWrapper.getFuturePrice().thenApply(cardPrice -> cardPrice);
     }
 
+//    TODO: make it possible to add -1 values to database to mark that an exception has occurred
     @Override
 //    public CompletableFuture<CardPrice> updatePrice() {
     public void updatePrice() {
@@ -91,30 +88,9 @@ public class SimpleCard implements Card {
 
         futureCardPriceWrapper.setFuturePrice(cardInfoScrapper
                 .getCardPrice(cardData.cardName())
-                .thenApply(futureActCardPrice -> {
-                    String sql = """
-                        UPDATE cards SET previous_price = actual_price, actual_price = ?::numeric(4,2)
-                        WHERE multiverse_id = ?::integer;
-                    """;
-
-                    try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                        final double actCardPrice = getActCardPrice().actPrice();
-
-                        if (futureActCardPrice != null && futureActCardPrice != 0) {
-                            preparedStatement.setDouble(1, futureActCardPrice);
-                        } else {
-                            preparedStatement.setNull(1, Types.NUMERIC);
-                        }
-
-                        preparedStatement.setInt(2, cardData.multiverseId());
-                        preparedStatement.executeUpdate();
-
-                        log.debug("New card price: {}", futureActCardPrice);
-                        return new CardPrice(actCardPrice, futureActCardPrice != null ? futureActCardPrice : 0);
-                    } catch (SQLException e) {
-                        throw new RuntimeException(e);
-                    }
-                })
+                .thenApply(this::updateDatabaseData).exceptionally(throwable ->
+                    updateDatabaseData(-1.0)
+                )
         );
 
 //        log.debug("Future price: {}, isDone: {}, multiverseId: {}, hash: {}", futureCardPriceWrapper.getFuturePrice(), futureCardPriceWrapper.getFuturePrice().isDone(),
@@ -122,18 +98,31 @@ public class SimpleCard implements Card {
 //        return futureCardPrice;
     }
 
+    private CardPrice updateDatabaseData(Double newActCardPrice) {
+
+        final double actCardPrice = getActCardPrice().actPrice();
+
+        dslContext.update(CARDS)
+                .set(CARDS.PREVIOUS_PRICE, CARDS.ACTUAL_PRICE)
+                .set(CARDS.ACTUAL_PRICE, newActCardPrice != null ? new BigDecimal(newActCardPrice) : null)
+                .where(CARDS.MULTIVERSE_ID.eq(cardData.multiverseId()))
+                .execute();
+
+        return new CardPrice(actCardPrice, newActCardPrice != null ? newActCardPrice : actCardPrice);
+    }
+
     @Override
-    public Availability getAvailability() throws SQLException {
+    public Availability getAvailability() {
         CardPrice cardPrice = getActCardPrice();
 
-        boolean isActPriceZero = cardPrice.actPrice() == 0;
-        boolean isPrevPriceZero = cardPrice.prevPrice() == 0;
+        boolean isActPriceUnknown = cardPrice.actPrice() == 0 || cardPrice.actPrice() == -1;
+        boolean isPrevPriceUnknown = cardPrice.prevPrice() == 0 || cardPrice.prevPrice() == -1;
 
-        if (isActPriceZero) {
-            return isPrevPriceZero ? Availability.UNAVAILABLE_PREV_UNAVAILABLE
+        if (isActPriceUnknown) {
+            return isPrevPriceUnknown ? Availability.UNAVAILABLE_PREV_UNAVAILABLE
                     : Availability.AVAILABLE_PREV_AVAILABLE;
         } else {
-            return isPrevPriceZero ? Availability.AVAILABLE_PREV_UNAVAILABLE
+            return isPrevPriceUnknown ? Availability.AVAILABLE_PREV_UNAVAILABLE
                     : Availability.AVAILABLE_PREV_AVAILABLE;
         }
     }

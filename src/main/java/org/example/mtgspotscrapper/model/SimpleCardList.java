@@ -1,24 +1,25 @@
 package org.example.mtgspotscrapper.model;
 
+import org.example.mtgspotscrapper.model.cardImpl.SimpleCard;
+import org.example.mtgspotscrapper.model.records.CardData;
 import org.example.mtgspotscrapper.model.records.ListData;
-import org.example.mtgspotscrapper.model.utils.ResultProcessor;
 import org.example.mtgspotscrapper.viewmodel.Card;
 import org.example.mtgspotscrapper.viewmodel.CardList;
+import org.jooq.DSLContext;
+import org.jooq.Record1;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import static org.example.mtgspotscrapper.model.databaseClasses.Tables.*;
+
 import java.util.Collection;
+import java.util.concurrent.CompletableFuture;
 
 public class SimpleCardList implements CardList {
     private final ListData listData;
-    private final Connection connection;
-    private final ResultProcessor resultProcessor = new ResultProcessor();
+    private final DSLContext dslContext;
 
-    public SimpleCardList(ListData listData, Connection connection) {
+    public SimpleCardList(ListData listData, DSLContext dslContext) {
         this.listData = listData;
-        this.connection = connection;
+        this.dslContext = dslContext;
     }
 
     @Override
@@ -32,72 +33,44 @@ public class SimpleCardList implements CardList {
     }
 
     @Override
-    public Collection<Card> getCards() throws SQLException {
-        String sql = """
-                SELECT multiverse_id, previous_price, card_name, image_url, local_address
-                FROM fullcarddata JOIN public.listcards USING(multiverse_id)
-                JOIN lists USING (list_id)
-                WHERE list_name = ?::varchar;
-            """;
-
-        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)){
-            preparedStatement.setString(1, listData.name());
-            try (ResultSet resultSet = preparedStatement.executeQuery()){
-                return resultProcessor.getCardsFromResultSet(resultSet, connection);
-            }
-        }
+    public Collection<? extends Card> getCards() {
+        return dslContext.select(LISTCARDS.MULTIVERSE_ID, FULLCARDDATA.PREVIOUS_PRICE, FULLCARDDATA.CARD_NAME, FULLCARDDATA.IMAGE_URL, FULLCARDDATA.LOCAL_ADDRESS)
+                .from(FULLCARDDATA).join(LISTCARDS)
+                .using(FULLCARDDATA.MULTIVERSE_ID)
+                .join(LISTS)
+                .using(LISTS.LIST_ID)
+                .where(LISTS.LIST_NAME.eq(listData.name()))
+                .stream().map(cardData -> new SimpleCard(
+                        new CardData(cardData.getValue(FULLCARDDATA.MULTIVERSE_ID), cardData.getValue(FULLCARDDATA.CARD_NAME), cardData.getValue(FULLCARDDATA.IMAGE_URL)),
+                        CompletableFuture.completedFuture(cardData.getValue(FULLCARDDATA.LOCAL_ADDRESS)), dslContext)).toList();
     }
 
     @Override
     public void addCardToList(Card card) {
-//        if (!databaseService.cardIsPresent(card.getCardData().cardName())) {
-//            databaseService.addCard(card.getCardData().cardName());
-//        }
         if (card == null) {
             return;
         }
 
-        String sql = """
-            INSERT INTO listcards (list_id, multiverse_id) VALUES (?::integer, ?::integer);
-        """;
-
-        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)){
-            preparedStatement.setInt(1, listData.id());
-            preparedStatement.setInt(2, card.getCardData().multiverseId());
-
-            preparedStatement.execute();
-        }
-        catch (SQLException e){
-            throw new RuntimeException(e);
-        }
+        dslContext.insertInto(LISTCARDS, LISTCARDS.LIST_ID, LISTCARDS.MULTIVERSE_ID)
+                .values(listData.id(), card.getCardData().multiverseId())
+                .execute();
     }
 
     @Override
-    public boolean deleteCardFromList(String cardName) throws SQLException {
-        String sql = """
-            SELECT multiverse_id FROM cards WHERE card_name = ?::varchar;
-        """;
+    public boolean deleteCardFromList(String cardName) {
+        Record1<Integer> wrappedCardId = dslContext.select(CARDS.MULTIVERSE_ID)
+                .from(CARDS)
+                .where(CARDS.CARD_NAME.eq(cardName))
+                .fetchOne();
 
-        int cardId = -1;
-        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-            preparedStatement.setString(1, cardName);
-
-            try (ResultSet resultSet = preparedStatement.executeQuery()) {
-                if (resultSet.next()) {
-                    cardId = resultSet.getInt("multiverse_id");
-                }
-            }
+        if (wrappedCardId == null) {
+            return false;
         }
 
-        sql = """
-            DELETE FROM listcards WHERE multiverse_id = ?::integer;
-        """;
-
-        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-            preparedStatement.setInt(1, cardId);
-
-            return preparedStatement.executeUpdate() > 0;
-        }
+        dslContext.deleteFrom(LISTCARDS)
+                .where(LISTCARDS.MULTIVERSE_ID.eq(wrappedCardId.getValue(CARDS.MULTIVERSE_ID)))
+                .execute();
+        return true;
     }
 
     @Override

@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -94,6 +95,9 @@ public class CardInfoScrapperImpl implements CardInfoScrapper {
 //                for (String attribute : data) {
 ////                    System.out.print(attribute + ", ");
 //                }
+
+                    int amount = Integer.parseInt(data[data.length - 2]);
+                    scrapperLogger.info("Scrapped data: {}, amount: {}", Arrays.toString(data), amount);
                     String scrappedName = data[0];
 
                     Pattern nameV1 = Pattern.compile("^" + cardName+ "(\\s\\(.*\\))?$");
@@ -101,7 +105,7 @@ public class CardInfoScrapperImpl implements CardInfoScrapper {
 
 //                    scrapperLogger.info("Does it match: {}, str {}, card name: {}", matcher.matches(), scrappedName, cardName);
 
-                    if (data.length >= 5 && (scrappedName.equals(cardName) || matcher.matches())) {
+                    if (amount > 0 && data.length >= 5 && (scrappedName.equals(cardName) || matcher.matches())) {
                         minPrice = Math.min(minPrice, Double.parseDouble(data[4].substring(0, data[4].length() - 2)));
                     }
                 }
@@ -123,10 +127,5 @@ public class CardInfoScrapperImpl implements CardInfoScrapper {
                 driver.quit();
             }
         }, executorService);
-    }
-
-    public static void main(String[] args) {
-        var scrapper = new CardInfoScrapperImpl();
-        System.out.println(scrapper.getCardPrice("Llanowar Elves"));
     }
 }

@@ -13,6 +13,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <junit.version>5.10.0</junit.version>
         <selenium.version>4.23.0</selenium.version>
+        <psql.username>scrapper</psql.username>
+        <psql.password>aaa</psql.password>
     </properties>
 
     <dependencies>
@@ -53,23 +55,23 @@
             <version>3.3.2</version>
         </dependency>
 
-<!--        <dependency>-->
-<!--            <groupId>org.jooq</groupId>-->
-<!--            <artifactId>jooq</artifactId>-->
-<!--            <version>3.19.10</version>-->
-<!--        </dependency>-->
+        <dependency>
+            <groupId>org.jooq</groupId>
+            <artifactId>jooq</artifactId>
+            <version>3.19.10</version>
+        </dependency>
 
-<!--        &lt;!&ndash; These may not be required, unless you use the GenerationTool manually for code generation &ndash;&gt;-->
-<!--        <dependency>-->
-<!--            <groupId>org.jooq</groupId>-->
-<!--            <artifactId>jooq-meta</artifactId>-->
-<!--            <version>3.19.10</version>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>org.jooq</groupId>-->
-<!--            <artifactId>jooq-codegen</artifactId>-->
-<!--            <version>3.19.10</version>-->
-<!--        </dependency>-->
+        <!-- These may not be required, unless you use the GenerationTool manually for code generation -->
+        <dependency>
+            <groupId>org.jooq</groupId>
+            <artifactId>jooq-meta</artifactId>
+            <version>3.19.10</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jooq</groupId>
+            <artifactId>jooq-codegen</artifactId>
+            <version>3.19.10</version>
+        </dependency>
 
         <dependency>
             <groupId>org.postgresql</groupId>
@@ -127,6 +129,94 @@
 
     <build>
         <plugins>
+            <plugin>
+
+                <!-- Specify the maven code generator plugin -->
+                <!-- Use org.jooq                for the Open Source Edition
+                         org.jooq.pro            for commercial editions with Java 17 support,
+                         org.jooq.pro-java-11    for commercial editions with Java 11 support,
+                         org.jooq.pro-java-8     for commercial editions with Java 8 support,
+                         org.jooq.trial          for the free trial edition with Java 17 support,
+                         org.jooq.trial-java-11  for the free trial edition with Java 11 support,
+                         org.jooq.trial-java-8   for the free trial edition with Java 8 support
+
+                     Note: Only the Open Source Edition is hosted on Maven Central.
+                           Install the others locally using the provided scripts, or access them from here: https://repo.jooq.org -->
+                <groupId>org.jooq</groupId>
+                <artifactId>jooq-codegen-maven</artifactId>
+                <version>3.19.10</version>
+
+                <!-- The plugin should hook into the generate goal -->
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                    </execution>
+                </executions>
+
+                <!-- Manage the plugin's dependency. In this example, we'll use a PostgreSQL database -->
+                <dependencies>
+                    <dependency>
+                        <groupId>org.postgresql</groupId>
+                        <artifactId>postgresql</artifactId>
+                        <version>42.7.3</version>
+                    </dependency>
+                </dependencies>
+
+                <!-- Specify the plugin configuration.
+                     The configuration format is the same as for the standalone code generator -->
+                <configuration>
+
+                    <!-- JDBC connection parameters -->
+                    <jdbc>
+                        <driver>org.postgresql.Driver</driver>
+                        <url>jdbc:postgresql://localhost/${psql.username}</url>
+                        <user>${psql.username}</user>
+                        <password>${psql.password}</password>
+                    </jdbc>
+
+                    <!-- Generator parameters -->
+                    <generator>
+                        <!-- The default code generator. You can override this one, to generate your own code style.
+                             Supported generators:
+                             - org.jooq.codegen.JavaGenerator
+                             - org.jooq.codegen.KotlinGenerator
+                             - org.jooq.codegen.ScalaGenerator
+                             Defaults to org.jooq.codegen.JavaGenerator -->
+                        <name>org.jooq.codegen.JavaGenerator</name>
+
+                        <database>
+                            <!-- The database type. The format here is:
+                                 org.jooq.meta.[database].[database]Database -->
+                            <name>org.jooq.meta.postgres.PostgresDatabase</name>
+
+                            <!-- The database schema (or in the absence of schema support, in your RDBMS this
+                                 can be the owner, user, database name) to be generated -->
+                            <inputSchema>public</inputSchema>
+
+                            <!-- All elements that are generated from your schema
+                                 (A Java regular expression. Use the pipe to separate several expressions)
+                                 Watch out for case-sensitivity. Depending on your database, this might be important! -->
+                            <includes>.*</includes>
+
+                            <!-- All elements that are excluded from your schema
+                                 (A Java regular expression. Use the pipe to separate several expressions).
+                                 Excludes match before includes, i.e. excludes have a higher priority -->
+                            <!--            <excludes></excludes>-->
+                        </database>
+
+                        <target>
+                            <!-- The destination package of your generated classes (within the destination directory) -->
+                            <packageName>org.example.mtgspotscrapper.model.databaseClasses</packageName>
+
+                            <!-- The destination directory of your generated classes. Using Maven directory layout here -->
+                            <directory>src/main/java</directory>
+                        </target>
+                    </generator>
+                </configuration>
+            </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>

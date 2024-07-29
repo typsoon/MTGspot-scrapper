@@ -14,9 +14,9 @@ import org.example.mtgspotscrapper.App;
 import org.example.mtgspotscrapper.view.AbstractRightPane;
 import org.example.mtgspotscrapper.view.Addresses;
 import org.example.mtgspotscrapper.view.ScreenManager;
-import org.example.mtgspotscrapper.view.viewEvents.eventTypes.AddListEvent;
-import org.example.mtgspotscrapper.view.viewEvents.eventTypes.DeleteListEvent;
-import org.example.mtgspotscrapper.view.viewEvents.eventTypes.ImportListEvent;
+import org.example.mtgspotscrapper.viewmodel.eventHandling.eventTypes.userInteractionEventTypes.AddListEvent;
+import org.example.mtgspotscrapper.viewmodel.eventHandling.eventTypes.userInteractionEventTypes.DeleteListEvent;
+import org.example.mtgspotscrapper.viewmodel.eventHandling.eventTypes.userInteractionEventTypes.ImportListEvent;
 import org.example.mtgspotscrapper.viewmodel.DatabaseService;
 
 import java.io.IOException;

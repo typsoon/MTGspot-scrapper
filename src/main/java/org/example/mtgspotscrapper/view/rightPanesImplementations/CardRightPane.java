@@ -7,11 +7,10 @@ import javafx.scene.control.Label;
 import org.controlsfx.control.CheckComboBox;
 import org.example.mtgspotscrapper.view.AbstractRightPane;
 import org.example.mtgspotscrapper.view.ScreenManager;
-import org.example.mtgspotscrapper.view.viewEvents.eventTypes.AddCardEvent;
-import org.example.mtgspotscrapper.view.viewEvents.eventTypes.DeleteCardEvent;
-import org.example.mtgspotscrapper.view.viewEvents.eventTypes.UpdateAvailabilityEvent;
-import org.example.mtgspotscrapper.viewmodel.eventHandlers.records.AddCardData;
-import org.example.mtgspotscrapper.viewmodel.eventHandlers.records.DeleteCardData;
+import org.example.mtgspotscrapper.viewmodel.eventHandling.eventTypes.userInteractionEventTypes.AddCardEvent;
+import org.example.mtgspotscrapper.viewmodel.eventHandling.eventTypes.userInteractionEventTypes.DeleteCardEvent;
+import org.example.mtgspotscrapper.viewmodel.eventHandling.eventTypes.userInteractionEventTypes.UpdateAvailabilityEvent;
+import org.example.mtgspotscrapper.viewmodel.eventHandling.records.DeleteCardData;
 import org.example.mtgspotscrapper.viewmodel.CardList;
 import org.example.mtgspotscrapper.viewmodel.DatabaseService;
 
@@ -51,7 +50,7 @@ public class CardRightPane extends AbstractRightPane {
         updateAvailability.setCursor(Cursor.HAND);
 
         addLabel.setOnMouseClicked(mouseEvent -> {
-            addLabel.fireEvent(new AddCardEvent(new AddCardData(addDeleteField.getText(), cardList)));
+            addLabel.fireEvent(new AddCardEvent(addDeleteField.getText(), cardList));
             screenManager.displayList(cardList);
         });
 

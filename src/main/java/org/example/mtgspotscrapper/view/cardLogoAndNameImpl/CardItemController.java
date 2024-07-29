@@ -11,7 +11,6 @@ import org.example.mtgspotscrapper.model.records.CardPrice;
 import org.example.mtgspotscrapper.view.CardLogoAndNameController;
 import org.example.mtgspotscrapper.view.ScreenManager;
 import org.example.mtgspotscrapper.viewmodel.Card;
-import org.example.mtgspotscrapper.viewmodel.DownloaderService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,8 +26,8 @@ public class CardItemController extends CardLogoAndNameController {
     @FXML
     private Label prevPrice;
 
-    public CardItemController(Card card, ScreenManager screenManager, DownloaderService downloaderService) {
-        super(screenManager, downloaderService);
+    public CardItemController(Card card, ScreenManager screenManager) {
+        super(screenManager);
         this.card = card;
     }
 
@@ -73,6 +72,14 @@ public class CardItemController extends CardLogoAndNameController {
                         })
                         .exceptionally(throwable -> {
                             log.error("Error loading price", throwable);
+
+                            final Label actPrice = label;
+                            Platform.runLater(() -> {
+                                prevPrice.setText(actPrice.getText());
+                                actPrice.setText("exc");
+                                setBackground();
+                            });
+
                             throw new RuntimeException(throwable);
                         });
             }
@@ -85,15 +92,33 @@ public class CardItemController extends CardLogoAndNameController {
     final void displayPrice(CardPrice cardPrice) throws SQLException {
         final Label actPrice = label;
 
-        prevPrice.setText(cardPrice.prevPrice() != 0.0 ? String.valueOf(cardPrice.prevPrice()) : "-" );
-        actPrice.setText(cardPrice.actPrice() != 0.0 ? String.valueOf(cardPrice.actPrice()) : "-" );
+        prevPrice.setText(whatToDisplay(cardPrice.prevPrice()));
+        actPrice.setText(whatToDisplay(cardPrice.actPrice()));
 
-        vBox.setBackground(new Background(new BackgroundFill(
-                switch (card.getAvailability()) {
-                    case AVAILABLE_PREV_UNAVAILABLE -> Color.LIGHTGREEN;
-                    case AVAILABLE_PREV_AVAILABLE -> Color.LIGHTYELLOW;
-                    case UNAVAILABLE_PREV_AVAILABLE, UNAVAILABLE_PREV_UNAVAILABLE -> Color.rgb(255, 192,192);
-                }
-                , null, null)));
+        setBackground();
+    }
+
+    private static String whatToDisplay(Double price) {
+        if (price == -1)
+            return "exc";
+        if (price > 0)
+            return String.valueOf(price);
+        else return "-";
+    }
+
+    final void setBackground() {
+        try {
+            vBox.setBackground(new Background(new BackgroundFill(
+                    switch (card.getAvailability()) {
+                        case AVAILABLE_PREV_UNAVAILABLE -> Color.LIGHTGREEN;
+                        case AVAILABLE_PREV_AVAILABLE -> Color.LIGHTYELLOW;
+                        case UNAVAILABLE_PREV_AVAILABLE, UNAVAILABLE_PREV_UNAVAILABLE -> Color.rgb(255, 192,192);
+                    }
+                    , null, null)));
+        }
+        catch (SQLException e) {
+            log.error("Couldn't query database", e);
+            throw new RuntimeException(e);
+        }
     }
 }

@@ -10,12 +10,11 @@ import javafx.stage.Stage;
 import org.example.mtgspotscrapper.App;
 import org.example.mtgspotscrapper.model.SimpleDownloaderService;
 import org.example.mtgspotscrapper.viewmodel.DatabaseService;
-import org.example.mtgspotscrapper.model.SimpleDatabaseService;
+import org.example.mtgspotscrapper.model.PSQLDatabaseService;
 import org.example.mtgspotscrapper.viewmodel.DownloaderService;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.sql.SQLException;
 import java.util.Properties;
 
 public class LoginSceneController {
@@ -25,8 +24,8 @@ public class LoginSceneController {
         this.primaryStage = primaryStage;
     }
 
-    private void displayMainStage(DatabaseService databaseService, DownloaderService downloaderService) throws IOException {
-        ScreenManager screenManager = new ScreenManager(databaseService, downloaderService);
+    private void displayMainStage(DatabaseService databaseService) throws IOException {
+        ScreenManager screenManager = new ScreenManager(databaseService);
         FXMLLoader managerLoader = new FXMLLoader(App.class.getResource(Addresses.SCREEN_MANAGER));
         managerLoader.setController(screenManager);
 
@@ -36,7 +35,7 @@ public class LoginSceneController {
 
     private DatabaseService captureDataAndTryToLogIn(DownloaderService downloaderService) {
         try {
-            return new SimpleDatabaseService("jdbc:postgresql://localhost/", usernameField.getText(), passwordField.getText(), downloaderService);
+            return new PSQLDatabaseService("jdbc:postgresql://localhost/", usernameField.getText(), passwordField.getText(), downloaderService);
         }
         catch (Exception e) {
             return null;
@@ -44,28 +43,21 @@ public class LoginSceneController {
     }
 
     public boolean loggedInWithSavedCredentials() throws IOException {
-        try {
-            Properties credentials = new Properties();
+        Properties credentials = new Properties();
 
-            try (InputStream stream = App.class.getResourceAsStream("localData/credentials.properties")) {
-                DatabaseService databaseService;
-                DownloaderService downloaderService;
-                try {
-                    credentials.load(stream);
+        try (InputStream stream = App.class.getResourceAsStream("localData/credentials.properties")) {
+            DatabaseService databaseService;
+            try {
+                credentials.load(stream);
 
-                    downloaderService = new SimpleDownloaderService();
-                    databaseService = new SimpleDatabaseService("jdbc:postgresql://localhost/", credentials.getProperty("username"), credentials.getProperty("password"), downloaderService);
-                }
-                catch (IOException e) {
-                    return false;
-                }
-
-                displayMainStage(databaseService, downloaderService);
-                return true;
+                databaseService = new PSQLDatabaseService("jdbc:postgresql://localhost/", credentials.getProperty("username"), credentials.getProperty("password"), new SimpleDownloaderService());
             }
-        }
-        catch (SQLException ignored) {
-            return false;
+            catch (Exception e) {
+                return false;
+            }
+
+            displayMainStage(databaseService);
+            return true;
         }
     }
 
@@ -77,7 +69,7 @@ public class LoginSceneController {
             DatabaseService databaseService = captureDataAndTryToLogIn(downloaderService);
             if (databaseService != null) {
                 try {
-                    displayMainStage(databaseService, downloaderService);
+                    displayMainStage(databaseService);
                 } catch (IOException e) {
                     throw new RuntimeException("Failed to load screenManager", e);
                 }

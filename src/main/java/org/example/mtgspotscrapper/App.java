@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
+
 public class App extends Application {
     public static final Logger logger = LoggerFactory.getLogger(App.class);
 

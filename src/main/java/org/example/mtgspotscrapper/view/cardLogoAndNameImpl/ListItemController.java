@@ -7,15 +7,14 @@ import org.example.mtgspotscrapper.view.Addresses;
 import org.example.mtgspotscrapper.view.CardLogoAndNameController;
 import org.example.mtgspotscrapper.view.ScreenManager;
 import org.example.mtgspotscrapper.viewmodel.CardList;
-import org.example.mtgspotscrapper.viewmodel.DownloaderService;
 
 import java.util.Objects;
 
 public class ListItemController extends CardLogoAndNameController {
     private final CardList cardList;
 
-    public ListItemController(CardList cardList, ScreenManager screenManager, DownloaderService downloaderService) {
-        super(screenManager, downloaderService);
+    public ListItemController(CardList cardList, ScreenManager screenManager) {
+        super(screenManager);
         this.cardList = cardList;
     }
 
