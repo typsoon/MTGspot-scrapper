@@ -2,7 +2,6 @@ package org.example.mtgspotscrapper.view;
 
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Cursor;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.layout.*;
@@ -36,9 +35,6 @@ public class ScreenManager {
     @SuppressWarnings("unused")
     @FXML
     private void initialize() {
-        cardLists.setCursor(Cursor.HAND);
-        collection.setCursor(Cursor.HAND);
-
         borderPane.leftProperty();
         double leftPaneWidth = ((Region) borderPane.getLeft()).getPrefWidth();
 
@@ -51,6 +47,7 @@ public class ScreenManager {
         borderPane.widthProperty().addListener((observable, oldValue, newValue) -> {
             ((Region) borderPane.getLeft()).setPrefWidth(newValue.doubleValue()*leftToWholeRatio);
             cardsFlowPane.setPrefWidth(newValue.doubleValue()*leftToWholeRatio);
+            rightContainer.setPrefWidth(newValue.doubleValue()*(1-leftToWholeRatio));
         });
 
         cardLists.setOnMouseClicked(mouseEvent -> displayLists());
@@ -66,6 +63,7 @@ public class ScreenManager {
 //        borderPane.addEventHandler(SearchCardEvent.SEARCH_CARD, new SearchCardEventHandler(this, databaseService));
 
         borderPane.addEventHandler(UpdateAvailabilityEvent.UPDATE_AVAILABILITY, new UpdateAvailabilityEventHandler(databaseService));
+
     }
 
     public void displayLists() {
@@ -82,7 +80,7 @@ public class ScreenManager {
                 cardsFlowPane.getChildren().add(fxmlLoader.load());
             }
 
-            borderPane.setRight(listRightPaneController.getRightPane());
+            rightContainer.getChildren().setAll(listRightPaneController.getRightPane());
         }
         catch (Exception e) {
             App.logger.error(Arrays.toString(e.getStackTrace()));
@@ -110,7 +108,7 @@ public class ScreenManager {
                 cardsFlowPane.getChildren().add(fxmlLoader.load());
             }
 
-            borderPane.setRight(cardRightPaneController.getRightPane(cardList));
+            rightContainer.getChildren().setAll(cardRightPaneController.getRightPane(cardList));
         }
         catch (Exception e) {
             App.logger.error(Arrays.toString(e.getStackTrace()));
@@ -151,4 +149,8 @@ public class ScreenManager {
     @SuppressWarnings("unused")
     @FXML
     private FlowPane cardsFlowPane;
+
+    @SuppressWarnings("unused")
+    @FXML
+    private Pane rightContainer;
 }

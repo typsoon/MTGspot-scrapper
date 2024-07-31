@@ -1,4 +1,4 @@
-package org.example.mtgspotscrapper.viewmodel;
+package org.example.mtgspotscrapper.model.cardImpl;
 
 public enum Availability {
     AVAILABLE_PREV_UNAVAILABLE,

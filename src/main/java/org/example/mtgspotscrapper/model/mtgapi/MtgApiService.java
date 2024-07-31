@@ -1,6 +1,6 @@
 package org.example.mtgspotscrapper.model.mtgapi;
 
-import org.example.mtgspotscrapper.model.records.CardData;
+import org.example.mtgspotscrapper.model.cardImpl.CardData;
 
 public interface MtgApiService {
     @SuppressWarnings("unused")

@@ -8,7 +8,7 @@ import java.util.*;
 import io.magicthegathering.javasdk.api.CardAPI;
 import io.magicthegathering.javasdk.resource.Card;
 import org.example.mtgspotscrapper.App;
-import org.example.mtgspotscrapper.model.records.CardData;
+import org.example.mtgspotscrapper.model.cardImpl.CardData;
 import org.json.JSONArray;
 import org.json.JSONObject;
 

@@ -5,7 +5,7 @@
 
     <Appenders>
 <!--        <File name="File" fileName="src/main/resources/logs">-->
-        <File name="File" fileName="src/main/resources/logs">
+        <File name="File" fileName="src/main/resources/logs.txt">
             <PatternLayout>
                 <pattern>%d %p %C{1.} [%t] %m%n</pattern>
             </PatternLayout>

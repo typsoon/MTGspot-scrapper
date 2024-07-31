@@ -1,10 +1,7 @@
 package org.example.mtgspotscrapper.model.cardImpl;
 
-import org.example.mtgspotscrapper.model.records.CardData;
-import org.example.mtgspotscrapper.model.records.CardPrice;
 import org.example.mtgspotscrapper.model.scrapper.CardInfoScrapper;
 import org.example.mtgspotscrapper.model.scrapper.CardInfoScrapperImpl;
-import org.example.mtgspotscrapper.viewmodel.Availability;
 import org.example.mtgspotscrapper.viewmodel.Card;
 import org.jooq.DSLContext;
 
@@ -16,34 +13,16 @@ import static org.example.mtgspotscrapper.model.databaseClasses.Tables.*;
 
 public class SimpleCard implements Card {
     private final DSLContext dslContext;
-
     private final CardData cardData;
+    private final CompletableFuture<String> downloadedImageAddress;
 
-    /*
-        TODO: do something with this because it seems like a bad practice
-           Cards that share multiverseId should share futureCardPriceWrapper and downloadedImageAddress this is somehow similar to Singleton design pattern
-    */
+    private CardPrice cachedActPrice;
+    private CompletableFuture<CardPrice> futureCardPrice;
 
-    private static final ConcurrentMap<Integer, CompletableFuture<String>> downloadedImageAddresses = new ConcurrentHashMap<>();
-    private static final ConcurrentMap<Integer, FutureCardPriceWrapper> idToPriceWrapperMapping = new ConcurrentHashMap<>();
-
-    private final FutureCardPriceWrapper futureCardPriceWrapper;
-
-    public SimpleCard(CardData cardData, CompletableFuture<String> downloadedImageAddress, DSLContext dslContext) {
+    SimpleCard(CardData cardData, CompletableFuture<String> downloadedImageAddress, DSLContext dslContext) {
         this.dslContext = dslContext;
         this.cardData = cardData;
-
-        if (!downloadedImageAddresses.containsKey(cardData.multiverseId())) {
-            downloadedImageAddresses.put(cardData.multiverseId(), downloadedImageAddress);
-        }
-
-        if (idToPriceWrapperMapping.containsKey(cardData.multiverseId())) {
-            futureCardPriceWrapper = idToPriceWrapperMapping.get(cardData.multiverseId());
-        }
-        else {
-            futureCardPriceWrapper = new FutureCardPriceWrapper();
-            idToPriceWrapperMapping.put(cardData.multiverseId(), futureCardPriceWrapper);
-        }
+        this.downloadedImageAddress = downloadedImageAddress;
     }
 
     @Override
@@ -53,18 +32,26 @@ public class SimpleCard implements Card {
 
     @Override
     public CompletableFuture<String> getDownloadedImageAddress() {
-        return downloadedImageAddresses.get(cardData.multiverseId());
+        return downloadedImageAddress;
     }
 
     @Override
     public CardPrice getActCardPrice() {
-        return Objects.requireNonNull(dslContext.select(CARDS.PREVIOUS_PRICE, CARDS.ACTUAL_PRICE)
-                        .from(CARDS)
-                        .where(CARDS.MULTIVERSE_ID.eq(cardData.multiverseId()))
-                        .fetchOne())
-                .map(priceRecord -> new CardPrice(
-                        nullsafeBigDecToDouble(priceRecord.getValue(CARDS.PREVIOUS_PRICE)),
-                        nullsafeBigDecToDouble(priceRecord.getValue(CARDS.ACTUAL_PRICE))));
+        if (futureCardPrice != null && futureCardPrice.isDone()) {
+            return futureCardPrice.resultNow();
+        }
+
+        if (cachedActPrice == null) {
+            cachedActPrice = Objects.requireNonNull(dslContext.select(CARDS.PREVIOUS_PRICE, CARDS.ACTUAL_PRICE)
+                            .from(CARDS)
+                            .where(CARDS.MULTIVERSE_ID.eq(cardData.multiverseId()))
+                            .fetchOne())
+                    .map(priceRecord -> new CardPrice(
+                            nullsafeBigDecToDouble(priceRecord.getValue(CARDS.PREVIOUS_PRICE)),
+                            nullsafeBigDecToDouble(priceRecord.getValue(CARDS.ACTUAL_PRICE))));
+        }
+
+        return cachedActPrice;
     }
 
     private static double nullsafeBigDecToDouble(BigDecimal bigDecimal) {
@@ -73,11 +60,11 @@ public class SimpleCard implements Card {
 
     @Override
     public final CompletableFuture<CardPrice> getFutureCardPrice() {
-        if (futureCardPriceWrapper.getFuturePrice() == null) {
-            futureCardPriceWrapper.setFuturePrice(CompletableFuture.completedFuture(getActCardPrice()));
+        if (futureCardPrice == null) {
+            futureCardPrice = CompletableFuture.completedFuture(getActCardPrice());
         }
 
-        return futureCardPriceWrapper.getFuturePrice().thenApply(cardPrice -> cardPrice);
+        return futureCardPrice.thenApply(cardPrice -> cardPrice);
     }
 
 //    TODO: make it possible to add -1 values to database to mark that an exception has occurred
@@ -86,13 +73,13 @@ public class SimpleCard implements Card {
     public void updatePrice() {
         CardInfoScrapper cardInfoScrapper = new CardInfoScrapperImpl();
 
-        futureCardPriceWrapper.setFuturePrice(cardInfoScrapper
+        futureCardPrice = cardInfoScrapper
                 .getCardPrice(cardData.cardName())
-                .thenApply(this::updateDatabaseData).exceptionally(throwable ->
-                    updateDatabaseData(-1.0)
-                )
-        );
+                .thenApply(this::updateDatabaseData)
+                .exceptionally(throwable ->
+                    updateDatabaseData(-1.0));
 
+        futureCardPrice.thenApply(cardPrice -> cachedActPrice = cardPrice);
 //        log.debug("Future price: {}, isDone: {}, multiverseId: {}, hash: {}", futureCardPriceWrapper.getFuturePrice(), futureCardPriceWrapper.getFuturePrice().isDone(),
 //                cardData.multiverseId(), futureCardPriceWrapper.getFuturePrice().hashCode());
 //        return futureCardPrice;
@@ -113,34 +100,11 @@ public class SimpleCard implements Card {
 
     @Override
     public Availability getAvailability() {
-        CardPrice cardPrice = getActCardPrice();
-
-        boolean isActPriceUnknown = cardPrice.actPrice() == 0 || cardPrice.actPrice() == -1;
-        boolean isPrevPriceUnknown = cardPrice.prevPrice() == 0 || cardPrice.prevPrice() == -1;
-
-        if (isActPriceUnknown) {
-            return isPrevPriceUnknown ? Availability.UNAVAILABLE_PREV_UNAVAILABLE
-                    : Availability.AVAILABLE_PREV_AVAILABLE;
-        } else {
-            return isPrevPriceUnknown ? Availability.AVAILABLE_PREV_UNAVAILABLE
-                    : Availability.AVAILABLE_PREV_AVAILABLE;
-        }
+        return getActCardPrice().getAvailability();
     }
 
     @Override
     public String toString() {
         return cardData.toString() + " " + getDownloadedImageAddress();
-    }
-}
-
-class FutureCardPriceWrapper {
-    private CompletableFuture<CardPrice> futurePrice;
-
-    CompletableFuture<CardPrice> getFuturePrice() {
-        return futurePrice;
-    }
-
-    void setFuturePrice(CompletableFuture<CardPrice> futurePrice) {
-        this.futurePrice = futurePrice;
     }
 }

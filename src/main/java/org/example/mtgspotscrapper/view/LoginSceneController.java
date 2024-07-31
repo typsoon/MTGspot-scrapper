@@ -19,9 +19,21 @@ import java.util.Properties;
 
 public class LoginSceneController {
     private final Stage primaryStage;
+    private final boolean executeJooqLogging;
 
     public LoginSceneController(Stage primaryStage) {
         this.primaryStage = primaryStage;
+
+        boolean temp = false;
+        try(InputStream inputStream = App.class.getResourceAsStream("application.properties")) {
+            if (inputStream != null) {
+                Properties properties = new Properties();
+                properties.load(inputStream);
+                temp = Boolean.parseBoolean(properties.getProperty("executeJooqLogging"));
+            }
+        } catch (IOException ignored) {}
+
+        executeJooqLogging = temp;
     }
 
     private void displayMainStage(DatabaseService databaseService) throws IOException {
@@ -35,7 +47,7 @@ public class LoginSceneController {
 
     private DatabaseService captureDataAndTryToLogIn(DownloaderService downloaderService) {
         try {
-            return new PSQLDatabaseService("jdbc:postgresql://localhost/", usernameField.getText(), passwordField.getText(), downloaderService);
+            return new PSQLDatabaseService("jdbc:postgresql://localhost/", usernameField.getText(), passwordField.getText(), downloaderService, executeJooqLogging);
         }
         catch (Exception e) {
             return null;
@@ -50,7 +62,7 @@ public class LoginSceneController {
             try {
                 credentials.load(stream);
 
-                databaseService = new PSQLDatabaseService("jdbc:postgresql://localhost/", credentials.getProperty("username"), credentials.getProperty("password"), new SimpleDownloaderService());
+                databaseService = new PSQLDatabaseService("jdbc:postgresql://localhost/", credentials.getProperty("username"), credentials.getProperty("password"), new SimpleDownloaderService(), executeJooqLogging);
             }
             catch (Exception e) {
                 return false;

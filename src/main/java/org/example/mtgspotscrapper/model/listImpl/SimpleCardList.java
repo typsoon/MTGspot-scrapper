@@ -1,8 +1,7 @@
-package org.example.mtgspotscrapper.model;
+package org.example.mtgspotscrapper.model.listImpl;
 
-import org.example.mtgspotscrapper.model.cardImpl.SimpleCard;
-import org.example.mtgspotscrapper.model.records.CardData;
-import org.example.mtgspotscrapper.model.records.ListData;
+import org.example.mtgspotscrapper.model.cardImpl.CardManager;
+import org.example.mtgspotscrapper.model.cardImpl.CardData;
 import org.example.mtgspotscrapper.viewmodel.Card;
 import org.example.mtgspotscrapper.viewmodel.CardList;
 import org.jooq.DSLContext;
@@ -16,10 +15,12 @@ import java.util.concurrent.CompletableFuture;
 public class SimpleCardList implements CardList {
     private final ListData listData;
     private final DSLContext dslContext;
+    private final CardManager cardManager;
 
-    public SimpleCardList(ListData listData, DSLContext dslContext) {
+    public SimpleCardList(ListData listData, DSLContext dslContext, CardManager cardManager) {
         this.listData = listData;
         this.dslContext = dslContext;
+        this.cardManager = cardManager;
     }
 
     @Override
@@ -34,15 +35,12 @@ public class SimpleCardList implements CardList {
 
     @Override
     public Collection<? extends Card> getCards() {
-        return dslContext.select(LISTCARDS.MULTIVERSE_ID, FULLCARDDATA.PREVIOUS_PRICE, FULLCARDDATA.CARD_NAME, FULLCARDDATA.IMAGE_URL, FULLCARDDATA.LOCAL_ADDRESS)
-                .from(FULLCARDDATA).join(LISTCARDS)
-                .using(FULLCARDDATA.MULTIVERSE_ID)
-                .join(LISTS)
-                .using(LISTS.LIST_ID)
-                .where(LISTS.LIST_NAME.eq(listData.name()))
-                .stream().map(cardData -> new SimpleCard(
-                        new CardData(cardData.getValue(FULLCARDDATA.MULTIVERSE_ID), cardData.getValue(FULLCARDDATA.CARD_NAME), cardData.getValue(FULLCARDDATA.IMAGE_URL)),
-                        CompletableFuture.completedFuture(cardData.getValue(FULLCARDDATA.LOCAL_ADDRESS)), dslContext)).toList();
+        return dslContext.select(FULLLISTDATA.MULTIVERSE_ID, FULLLISTDATA.CARD_NAME, FULLLISTDATA.IMAGE_URL, FULLLISTDATA.LOCAL_ADDRESS)
+                .from(FULLLISTDATA)
+                .where(FULLLISTDATA.LIST_NAME.eq(listData.name()))
+                .stream().map(cardData -> cardManager.getCard(
+                        new CardData(cardData.getValue(FULLLISTDATA.MULTIVERSE_ID), cardData.getValue(FULLLISTDATA.CARD_NAME), cardData.getValue(FULLLISTDATA.IMAGE_URL)),
+                        CompletableFuture.completedFuture(cardData.getValue(FULLLISTDATA.LOCAL_ADDRESS)), dslContext)).toList();
     }
 
     @Override

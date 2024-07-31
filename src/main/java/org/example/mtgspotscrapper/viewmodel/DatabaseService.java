@@ -14,5 +14,4 @@ public interface DatabaseService {
 
     boolean deleteList(String listName) throws SQLException;
     Card getCard(String cardName) throws SQLException;
-
 }

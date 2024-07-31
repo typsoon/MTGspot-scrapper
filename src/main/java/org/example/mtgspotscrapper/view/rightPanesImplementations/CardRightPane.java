@@ -1,7 +1,6 @@
 package org.example.mtgspotscrapper.view.rightPanesImplementations;
 
 import javafx.fxml.FXML;
-import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import org.controlsfx.control.CheckComboBox;
@@ -41,13 +40,7 @@ public class CardRightPane extends AbstractRightPane {
         cb.getItems().add("Available, previously available");
         cb.getItems().add("Unavailable, previously available");
         cb.getItems().add("Unavailable, previously unavailable");
-        gridPane.add(cb, 2, 3);
-
-        addLabel.setCursor(Cursor.HAND);
-        deleteLabel.setCursor(Cursor.HAND);
-
-        searchLabel.setCursor(Cursor.HAND);
-        updateAvailability.setCursor(Cursor.HAND);
+        gridPane.add(cb, 3, 3);
 
         addLabel.setOnMouseClicked(mouseEvent -> {
             addLabel.fireEvent(new AddCardEvent(addDeleteField.getText(), cardList));

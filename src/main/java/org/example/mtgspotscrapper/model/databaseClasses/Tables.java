@@ -6,6 +6,7 @@ package org.example.mtgspotscrapper.model.databaseClasses;
 
 import org.example.mtgspotscrapper.model.databaseClasses.tables.Cards;
 import org.example.mtgspotscrapper.model.databaseClasses.tables.Fullcarddata;
+import org.example.mtgspotscrapper.model.databaseClasses.tables.Fulllistdata;
 import org.example.mtgspotscrapper.model.databaseClasses.tables.Listcards;
 import org.example.mtgspotscrapper.model.databaseClasses.tables.Lists;
 import org.example.mtgspotscrapper.model.databaseClasses.tables.Listslogos;
@@ -27,6 +28,11 @@ public class Tables {
      * The table <code>public.fullcarddata</code>.
      */
     public static final Fullcarddata FULLCARDDATA = Fullcarddata.FULLCARDDATA;
+
+    /**
+     * The table <code>public.fulllistdata</code>.
+     */
+    public static final Fulllistdata FULLLISTDATA = Fulllistdata.FULLLISTDATA;
 
     /**
      * The table <code>public.listcards</code>.

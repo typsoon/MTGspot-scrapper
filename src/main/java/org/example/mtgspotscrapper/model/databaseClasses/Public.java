@@ -9,6 +9,7 @@ import java.util.List;
 
 import org.example.mtgspotscrapper.model.databaseClasses.tables.Cards;
 import org.example.mtgspotscrapper.model.databaseClasses.tables.Fullcarddata;
+import org.example.mtgspotscrapper.model.databaseClasses.tables.Fulllistdata;
 import org.example.mtgspotscrapper.model.databaseClasses.tables.Listcards;
 import org.example.mtgspotscrapper.model.databaseClasses.tables.Lists;
 import org.example.mtgspotscrapper.model.databaseClasses.tables.Listslogos;
@@ -40,6 +41,11 @@ public class Public extends SchemaImpl {
      * The table <code>public.fullcarddata</code>.
      */
     public final Fullcarddata FULLCARDDATA = Fullcarddata.FULLCARDDATA;
+
+    /**
+     * The table <code>public.fulllistdata</code>.
+     */
+    public final Fulllistdata FULLLISTDATA = Fulllistdata.FULLLISTDATA;
 
     /**
      * The table <code>public.listcards</code>.
@@ -79,6 +85,7 @@ public class Public extends SchemaImpl {
         return Arrays.asList(
             Cards.CARDS,
             Fullcarddata.FULLCARDDATA,
+            Fulllistdata.FULLLISTDATA,
             Listcards.LISTCARDS,
             Lists.LISTS,
             Listslogos.LISTSLOGOS,

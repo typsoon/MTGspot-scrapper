@@ -35,6 +35,9 @@ public class ImportListEventHandler extends MyEventHandler<ImportListEvent> {
 
         try {
             CardList addedList = databaseService.addList(importListEvent.getListName());
+            if (addedList == null) {
+                throw new RuntimeException("That list already exists");
+            }
 
             for (String name : cardNames) {
                 Card addedCard = databaseService.getCard(name);

@@ -7,7 +7,7 @@ import javafx.scene.image.Image;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
 import javafx.scene.paint.Color;
-import org.example.mtgspotscrapper.model.records.CardPrice;
+import org.example.mtgspotscrapper.model.cardImpl.CardPrice;
 import org.example.mtgspotscrapper.view.CardLogoAndNameController;
 import org.example.mtgspotscrapper.view.ScreenManager;
 import org.example.mtgspotscrapper.viewmodel.Card;
@@ -35,12 +35,24 @@ public class CardItemController extends CardLogoAndNameController {
     protected void initialize() {
 //        log.debug("before");
         try {
-            card.getDownloadedImageAddress().thenAcceptAsync(imageAddress -> {
+//            card.getDownloadedImageAddress().thenAcceptAsync(imageAddress -> {
+            card.getDownloadedImageAddress().thenAccept(imageAddress -> {
                 if (imageAddress != null) {
                     String imagePath = "file:" + imageAddress;
 //                    log.debug("Image path: {}", "file:" + imageAddress);
                     // Ensure UI updates happen on the JavaFX Application Thread
+
+//                    log.debug("Loading image from {}", imagePath);
+//                    Image image = new Image(imagePath);
+//                    log.debug("Finished Loading image from {}", imagePath);
                     Platform.runLater(() -> imageView.setImage(new Image(imagePath)));
+//                    Platform.runLater(() -> {
+//                        try {
+//                            imageView.setImage(new Image(new FileInputStream(imageAddress)));
+//                        } catch (IOException e) {
+//                            throw new RuntimeException(e);
+//                        }
+//                    });
                 } else {
                     log.error("Image address is null. Failed to download image.");
                 }

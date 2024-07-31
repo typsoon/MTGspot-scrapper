@@ -14,6 +14,7 @@ module org.example.mtgspotscrapper {
     requires org.checkerframework.checker.qual;
     requires org.controlsfx.controls;
     requires org.jooq;
+    requires jdk.security.auth;
 //    requires org.apache.commons.csv;
 
     opens org.example.mtgspotscrapper.view to javafx.fxml;

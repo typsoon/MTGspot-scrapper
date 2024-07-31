@@ -1,7 +1,8 @@
 package org.example.mtgspotscrapper.viewmodel;
 
-import org.example.mtgspotscrapper.model.records.CardData;
-import org.example.mtgspotscrapper.model.records.CardPrice;
+import org.example.mtgspotscrapper.model.cardImpl.Availability;
+import org.example.mtgspotscrapper.model.cardImpl.CardData;
+import org.example.mtgspotscrapper.model.cardImpl.CardPrice;
 
 import java.sql.SQLException;
 import java.util.concurrent.CompletableFuture;
