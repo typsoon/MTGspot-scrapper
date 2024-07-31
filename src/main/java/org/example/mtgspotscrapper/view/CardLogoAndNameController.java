@@ -6,7 +6,6 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
 
 public abstract class CardLogoAndNameController {
-    protected final ScreenManager screenManager;
 
     @FXML
     protected ImageView imageView;
@@ -20,8 +19,4 @@ public abstract class CardLogoAndNameController {
     @SuppressWarnings("unused")
     @FXML
     protected abstract void initialize();
-
-    protected CardLogoAndNameController(ScreenManager screenManager) {
-        this.screenManager = screenManager;
-    }
 }

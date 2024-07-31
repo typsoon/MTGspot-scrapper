@@ -16,7 +16,6 @@ import java.io.IOException;
 public abstract class AbstractRightPane {
     @SuppressWarnings({"FieldCanBeLocal", "unused"})
     private final DatabaseService databaseService;
-    protected final ScreenManager screenManager;
 
     protected final Node rightPane;
 
@@ -51,9 +50,8 @@ public abstract class AbstractRightPane {
     @FXML
     protected abstract void initialize();
 
-    protected AbstractRightPane(String fxmlPath, DatabaseService databaseService, ScreenManager screenManager) throws IOException {
+    protected AbstractRightPane(String fxmlPath, DatabaseService databaseService) throws IOException {
         this.databaseService = databaseService;
-        this.screenManager = screenManager;
 
         FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource(fxmlPath));
         fxmlLoader.setController(this);

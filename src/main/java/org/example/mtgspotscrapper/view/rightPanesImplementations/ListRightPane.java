@@ -13,7 +13,7 @@ import javafx.stage.Stage;
 import org.example.mtgspotscrapper.App;
 import org.example.mtgspotscrapper.view.AbstractRightPane;
 import org.example.mtgspotscrapper.view.Addresses;
-import org.example.mtgspotscrapper.view.ScreenManager;
+import org.example.mtgspotscrapper.view.viewEvents.guiEvents.ShowAllListsEvent;
 import org.example.mtgspotscrapper.viewmodel.eventHandling.eventTypes.userInteractionEventTypes.AddListEvent;
 import org.example.mtgspotscrapper.viewmodel.eventHandling.eventTypes.userInteractionEventTypes.DeleteListEvent;
 import org.example.mtgspotscrapper.viewmodel.eventHandling.eventTypes.userInteractionEventTypes.ImportListEvent;
@@ -22,8 +22,8 @@ import org.example.mtgspotscrapper.viewmodel.DatabaseService;
 import java.io.IOException;
 
 public class ListRightPane extends AbstractRightPane {
-    public ListRightPane(String fxmlPath, DatabaseService databaseService, ScreenManager screenManager) throws IOException {
-        super(fxmlPath, databaseService, screenManager);
+    public ListRightPane(String fxmlPath, DatabaseService databaseService) throws IOException {
+        super(fxmlPath, databaseService);
     }
 
     public Node getRightPane() {
@@ -36,20 +36,14 @@ public class ListRightPane extends AbstractRightPane {
 
     @Override
     protected void initialize() {
-        addLabel.setCursor(Cursor.HAND);
-        deleteLabel.setCursor(Cursor.HAND);
-
-        searchLabel.setCursor(Cursor.HAND);
-        importList.setCursor(Cursor.HAND);
-
         addLabel.setOnMouseClicked(mouseEvent -> {
             addLabel.fireEvent(new AddListEvent(addDeleteField.getText()));
-            screenManager.displayLists();
+            addLabel.fireEvent(new ShowAllListsEvent());
         });
 
         deleteLabel.setOnMouseClicked(mouseEvent -> {
             deleteLabel.fireEvent(new DeleteListEvent(addDeleteField.getText()));
-            screenManager.displayLists();
+            addLabel.fireEvent(new ShowAllListsEvent());
         });
 
         importList.setOnMouseClicked(mouseEvent -> {

@@ -5,7 +5,7 @@ import javafx.scene.image.Image;
 import org.example.mtgspotscrapper.App;
 import org.example.mtgspotscrapper.view.Addresses;
 import org.example.mtgspotscrapper.view.CardLogoAndNameController;
-import org.example.mtgspotscrapper.view.ScreenManager;
+import org.example.mtgspotscrapper.view.viewEvents.guiEvents.ShowListEvent;
 import org.example.mtgspotscrapper.viewmodel.CardList;
 
 import java.util.Objects;
@@ -13,8 +13,7 @@ import java.util.Objects;
 public class ListItemController extends CardLogoAndNameController {
     private final CardList cardList;
 
-    public ListItemController(CardList cardList, ScreenManager screenManager) {
-        super(screenManager);
+    public ListItemController(CardList cardList) {
         this.cardList = cardList;
     }
 
@@ -25,6 +24,9 @@ public class ListItemController extends CardLogoAndNameController {
         label.setText(cardList.getName());
 
         vBox.setCursor(Cursor.HAND);
-        vBox.setOnMouseClicked(mouseEvent -> screenManager.displayList(cardList));
+        vBox.setOnMouseClicked(mouseEvent -> {
+            ShowListEvent showListEventEvent = new ShowListEvent(cardList);
+            vBox.fireEvent(showListEventEvent);
+        });
     }
 }

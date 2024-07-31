@@ -6,12 +6,12 @@ import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 
 public interface DatabaseService {
-    Collection<CardList> getAllLists() throws SQLException;
-    CardList getCardList(String name) throws SQLException;
+    Collection<CardList> getAllLists();
+    CardList getCardList(String name);
 
-    CompletableFuture<Card> addCard(String cardName) throws SQLException, IOException;
-    CardList addList(String listName) throws SQLException, IOException;
+    CompletableFuture<Card> addCard(String cardName);
+    CardList addList(String listName);
 
-    boolean deleteList(String listName) throws SQLException;
-    Card getCard(String cardName) throws SQLException;
+    boolean deleteList(String listName);
+    Card getCard(String cardName);
 }

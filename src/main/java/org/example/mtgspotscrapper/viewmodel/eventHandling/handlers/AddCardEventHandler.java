@@ -32,17 +32,13 @@ public class AddCardEventHandler extends MyEventHandler<AddCardEvent> {
                 executeAdd(addedCard, addCardEvent.getCardList());
             }
 
-        } catch (SQLException | IOException e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
     private void executeAdd(Card card, CardList cardList) {
-        try {
-            Objects.requireNonNull(cardList).addCardToList(card);
-        } catch (SQLException | IOException e) {
-            throw new RuntimeException(e);
-        }
+        Objects.requireNonNull(cardList).addCardToList(card);
 
         if (card != null)
             addEventLogger.info("Card added: {}, List: {}", card.getCardData().cardName(), cardList);

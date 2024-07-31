@@ -18,7 +18,6 @@ import org.jooq.impl.DSL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.sql.*;
 import java.util.*;
 import java.util.concurrent.*;
@@ -57,7 +56,8 @@ public class PSQLDatabaseService implements DatabaseService {
     public CardList getCardList(String name) {
         Result<Record> lists = dslContext.select()
                 .from(LISTS)
-                .leftJoin(LISTSLOGOS).using(LISTS.LOGO_ID)
+                .leftJoin(LISTSLOGOS)
+                .using(LISTS.LOGO_ID)
                 .where(LISTS.LIST_NAME.eq(name))
                 .fetch();
 
@@ -147,8 +147,6 @@ public class PSQLDatabaseService implements DatabaseService {
 
         } catch (SQLException e) {
             log.error("Something went wrong", e);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
         }
     }
 }

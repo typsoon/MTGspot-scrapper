@@ -5,7 +5,7 @@ import javafx.scene.Node;
 import javafx.scene.control.Label;
 import org.controlsfx.control.CheckComboBox;
 import org.example.mtgspotscrapper.view.AbstractRightPane;
-import org.example.mtgspotscrapper.view.ScreenManager;
+import org.example.mtgspotscrapper.view.viewEvents.guiEvents.ShowListEvent;
 import org.example.mtgspotscrapper.viewmodel.eventHandling.eventTypes.userInteractionEventTypes.AddCardEvent;
 import org.example.mtgspotscrapper.viewmodel.eventHandling.eventTypes.userInteractionEventTypes.DeleteCardEvent;
 import org.example.mtgspotscrapper.viewmodel.eventHandling.eventTypes.userInteractionEventTypes.UpdateAvailabilityEvent;
@@ -17,8 +17,8 @@ import java.io.IOException;
 import java.util.Objects;
 
 public class CardRightPane extends AbstractRightPane {
-    public CardRightPane(String fxmlPath, DatabaseService databaseService, ScreenManager screenManager) throws IOException {
-        super(fxmlPath, databaseService, screenManager);
+    public CardRightPane(String fxmlPath, DatabaseService databaseService) throws IOException {
+        super(fxmlPath, databaseService);
     }
 
     private CardList cardList;
@@ -44,17 +44,17 @@ public class CardRightPane extends AbstractRightPane {
 
         addLabel.setOnMouseClicked(mouseEvent -> {
             addLabel.fireEvent(new AddCardEvent(addDeleteField.getText(), cardList));
-            screenManager.displayList(cardList);
+            addLabel.fireEvent(new ShowListEvent(cardList));
         });
 
         deleteLabel.setOnMouseClicked(mouseEvent -> {
             deleteLabel.fireEvent(new DeleteCardEvent(new DeleteCardData(addDeleteField.getText(), cardList)));
-            screenManager.displayList(cardList);
+            deleteLabel.fireEvent(new ShowListEvent(cardList));
         });
 
         updateAvailability.setOnMouseClicked(mouseEvent -> {
             updateAvailability.fireEvent(new UpdateAvailabilityEvent(cardList));
-            screenManager.displayList(cardList);
+            deleteLabel.fireEvent(new ShowListEvent(cardList));
         });
     }
 }

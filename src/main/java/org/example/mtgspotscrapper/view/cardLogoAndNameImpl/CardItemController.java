@@ -9,7 +9,6 @@ import javafx.scene.layout.BackgroundFill;
 import javafx.scene.paint.Color;
 import org.example.mtgspotscrapper.model.cardImpl.CardPrice;
 import org.example.mtgspotscrapper.view.CardLogoAndNameController;
-import org.example.mtgspotscrapper.view.ScreenManager;
 import org.example.mtgspotscrapper.viewmodel.Card;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,8 +25,7 @@ public class CardItemController extends CardLogoAndNameController {
     @FXML
     private Label prevPrice;
 
-    public CardItemController(Card card, ScreenManager screenManager) {
-        super(screenManager);
+    public CardItemController(Card card) {
         this.card = card;
     }
 

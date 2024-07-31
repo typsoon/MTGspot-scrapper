@@ -49,7 +49,7 @@ public class ImportListEventHandler extends MyEventHandler<ImportListEvent> {
                 }
             }
         }
-        catch (SQLException | IOException e) {
+        catch (Exception e) {
             importEventLogger.error("Error adding list {}", importListEvent.getListName(), e);
             throw new RuntimeException(e);
         }
@@ -58,7 +58,7 @@ public class ImportListEventHandler extends MyEventHandler<ImportListEvent> {
     private void executeAdd(Card card, CardList cardList) {
         try {
             Objects.requireNonNull(cardList).addCardToList(card);
-        } catch (SQLException | IOException e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
 

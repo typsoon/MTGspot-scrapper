@@ -7,9 +7,6 @@ import org.example.mtgspotscrapper.viewmodel.DatabaseService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.sql.SQLException;
-
 public class AddListEventHandler extends MyEventHandler<AddListEvent> {
     protected static Logger addListLogger = LoggerFactory.getLogger(AddListEventHandler.class);
 
@@ -23,7 +20,7 @@ public class AddListEventHandler extends MyEventHandler<AddListEvent> {
             @SuppressWarnings("unused")
             CardList cardList = databaseService.addList(addListEvent.getListName());
             addListLogger.info("List added, list name: {}", addListEvent.getListName());
-        } catch (SQLException | IOException e) {
+        } catch (Exception e) {
             addListLogger.error("Failed to add list: {}", addListEvent.getListName(),  e);
             throw new RuntimeException(e);
         }

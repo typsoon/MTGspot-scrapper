@@ -9,11 +9,12 @@ import io.magicthegathering.javasdk.api.CardAPI;
 import io.magicthegathering.javasdk.resource.Card;
 import org.example.mtgspotscrapper.App;
 import org.example.mtgspotscrapper.model.cardImpl.CardData;
+import org.example.mtgspotscrapper.view.sidesControllers.LeftSideManager;
+import org.example.mtgspotscrapper.view.sidesControllers.RightSideManager;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class SimpleMtgApiService implements MtgApiService {
-
     @Override
     public CardData getCardData(String cardName) {
         return getCardDataBrute(cardName);

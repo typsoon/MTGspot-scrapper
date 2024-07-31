@@ -24,7 +24,7 @@ public class DeleteCardEventHandler extends MyEventHandler<DeleteCardEvent> {
             if(cardList.deleteCardFromList(deleteCardEvent.getDeleteCardData().cardName()))
                 deleteCardLogger.info("Card deleted: {}, List: {}", deleteCardEvent.getDeleteCardData().cardName(), cardList);
             else deleteCardLogger.info("Card was not deleted (not in list): Card: {}, List: {}", deleteCardEvent.getDeleteCardData().cardName(), cardList);
-        } catch (SQLException e) {
+        } catch (Exception e) {
 //            screenManager.displayAlert(e);
             deleteCardLogger.error("Failed to delete card: {}, from list: {}", deleteCardEvent.getDeleteCardData().cardName(), cardList, e);
             throw new RuntimeException(e);

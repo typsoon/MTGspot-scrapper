@@ -18,6 +18,10 @@ public class SimpleDownloaderService implements DownloaderService {
 //    TODO: learn about shutdown hooks to properly shut this down
     private final ExecutorService executor = Executors.newCachedThreadPool();
 
+    public SimpleDownloaderService() {
+        Runtime.getRuntime().addShutdownHook(new Thread(executor::shutdownNow));
+    }
+
     private static HttpURLConnection manualRedirect(URL imageURL) throws IOException {
         HttpURLConnection httpURLConnection = (HttpURLConnection) imageURL.openConnection();
         int responseCode = httpURLConnection.getResponseCode();

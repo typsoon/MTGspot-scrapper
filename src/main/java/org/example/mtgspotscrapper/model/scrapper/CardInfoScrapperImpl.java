@@ -25,6 +25,10 @@ public class CardInfoScrapperImpl implements CardInfoScrapper {
     private static final ExecutorService executorService = Executors.newFixedThreadPool(30);
 //    private static final ExecutorService executorService = Executors.newCachedThreadPool();
 
+    public CardInfoScrapperImpl() {
+        Runtime.getRuntime().addShutdownHook(new Thread(executorService::shutdownNow));
+    }
+
     @Override
     public CompletableFuture<Double> getCardPrice(String cardName) {
         return CompletableFuture.supplyAsync(() -> {
