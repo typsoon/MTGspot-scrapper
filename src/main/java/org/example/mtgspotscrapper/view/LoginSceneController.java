@@ -8,7 +8,9 @@ import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import org.example.mtgspotscrapper.App;
-import org.example.mtgspotscrapper.model.SimpleDownloaderService;
+import org.example.mtgspotscrapper.model.downloader.SimpleDownloaderService;
+import org.example.mtgspotscrapper.model.mtgapi.MtgApiService;
+import org.example.mtgspotscrapper.model.mtgapi.SimpleMtgApiService;
 import org.example.mtgspotscrapper.viewmodel.DatabaseService;
 import org.example.mtgspotscrapper.model.PSQLDatabaseService;
 import org.example.mtgspotscrapper.viewmodel.DownloaderService;
@@ -37,6 +39,7 @@ public class LoginSceneController {
     }
 
     private void displayMainStage(DatabaseService databaseService) throws IOException {
+
         ScreenManager screenManager = new ScreenManager(databaseService);
         FXMLLoader managerLoader = new FXMLLoader(App.class.getResource(Addresses.SCREEN_MANAGER));
         managerLoader.setController(screenManager);
@@ -45,9 +48,9 @@ public class LoginSceneController {
         primaryStage.show();
     }
 
-    private DatabaseService captureDataAndTryToLogIn(DownloaderService downloaderService) {
+    private DatabaseService captureDataAndTryToLogIn(DownloaderService downloaderService, MtgApiService mtgApiService) {
         try {
-            return new PSQLDatabaseService("jdbc:postgresql://localhost/", usernameField.getText(), passwordField.getText(), downloaderService, executeJooqLogging);
+            return new PSQLDatabaseService("jdbc:postgresql://localhost/", usernameField.getText(), passwordField.getText(), downloaderService, mtgApiService, executeJooqLogging);
         }
         catch (Exception e) {
             return null;
@@ -59,10 +62,14 @@ public class LoginSceneController {
 
         try (InputStream stream = App.class.getResourceAsStream("localData/credentials.properties")) {
             DatabaseService databaseService;
+            DownloaderService downloaderService;
+            MtgApiService mtgApiService;
             try {
                 credentials.load(stream);
 
-                databaseService = new PSQLDatabaseService("jdbc:postgresql://localhost/", credentials.getProperty("username"), credentials.getProperty("password"), new SimpleDownloaderService(), executeJooqLogging);
+                downloaderService = new SimpleDownloaderService();
+                mtgApiService = new SimpleMtgApiService();
+                databaseService = new PSQLDatabaseService("jdbc:postgresql://localhost/", credentials.getProperty("user"), credentials.getProperty("password"), downloaderService, mtgApiService, executeJooqLogging);
             }
             catch (Exception e) {
                 return false;
@@ -78,7 +85,8 @@ public class LoginSceneController {
     private void initialize() {
         logInButton.setOnAction(event -> {
             DownloaderService downloaderService = new SimpleDownloaderService();
-            DatabaseService databaseService = captureDataAndTryToLogIn(downloaderService);
+            MtgApiService mtgApiService = new SimpleMtgApiService();
+            DatabaseService databaseService = captureDataAndTryToLogIn(downloaderService, mtgApiService);
             if (databaseService != null) {
                 try {
                     displayMainStage(databaseService);

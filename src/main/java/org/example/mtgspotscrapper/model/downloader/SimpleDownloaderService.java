@@ -1,4 +1,4 @@
-package org.example.mtgspotscrapper.model;
+package org.example.mtgspotscrapper.model.downloader;
 
 import org.example.mtgspotscrapper.viewmodel.DownloaderService;
 import org.slf4j.Logger;
@@ -19,7 +19,7 @@ public class SimpleDownloaderService implements DownloaderService {
     private final ExecutorService executor = Executors.newCachedThreadPool();
 
     public SimpleDownloaderService() {
-        Runtime.getRuntime().addShutdownHook(new Thread(executor::shutdownNow));
+        Runtime.getRuntime().addShutdownHook(new Thread(executor::shutdown));
     }
 
     private static HttpURLConnection manualRedirect(URL imageURL) throws IOException {

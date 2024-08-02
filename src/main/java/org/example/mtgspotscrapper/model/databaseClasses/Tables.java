@@ -11,6 +11,7 @@ import org.example.mtgspotscrapper.model.databaseClasses.tables.Listcards;
 import org.example.mtgspotscrapper.model.databaseClasses.tables.Lists;
 import org.example.mtgspotscrapper.model.databaseClasses.tables.Listslogos;
 import org.example.mtgspotscrapper.model.databaseClasses.tables.Localaddresses;
+import org.example.mtgspotscrapper.model.databaseClasses.tables.Namesandmultiverseid;
 
 
 /**
@@ -53,4 +54,9 @@ public class Tables {
      * The table <code>public.localaddresses</code>.
      */
     public static final Localaddresses LOCALADDRESSES = Localaddresses.LOCALADDRESSES;
+
+    /**
+     * The table <code>public.namesandmultiverseid</code>.
+     */
+    public static final Namesandmultiverseid NAMESANDMULTIVERSEID = Namesandmultiverseid.NAMESANDMULTIVERSEID;
 }

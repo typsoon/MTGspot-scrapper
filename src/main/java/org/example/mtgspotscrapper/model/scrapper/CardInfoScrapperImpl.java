@@ -92,13 +92,10 @@ public class CardInfoScrapperImpl implements CardInfoScrapper {
 
                 double minPrice = Double.POSITIVE_INFINITY;
 
-                System.out.println("Number of elements found: " + elements.size());
+                scrapperLogger.info("Number of elements found: {}", elements.size());
                 for (WebElement element : elements) {
                     List<WebElement> children = element.findElements(By.xpath("./*"));
                     String[] data = children.getFirst().getText().split("\n");
-//                for (String attribute : data) {
-////                    System.out.print(attribute + ", ");
-//                }
 
                     int amount = Integer.parseInt(data[data.length - 2]);
                     scrapperLogger.info("Scrapped data: {}, amount: {}", Arrays.toString(data), amount);

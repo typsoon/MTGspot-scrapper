@@ -1,7 +1,8 @@
 package org.example.mtgspotscrapper.model.cardImpl;
 
+import org.example.mtgspotscrapper.model.ObservableAtomicCounter;
+import org.example.mtgspotscrapper.model.SimpleObservableAtomicCounter;
 import org.example.mtgspotscrapper.model.mtgapi.MtgApiService;
-import org.example.mtgspotscrapper.model.mtgapi.SimpleMtgApiService;
 import org.example.mtgspotscrapper.viewmodel.Card;
 import org.example.mtgspotscrapper.viewmodel.DownloaderService;
 import org.jooq.DSLContext;
@@ -25,13 +26,23 @@ public class CardManager {
     private static final Logger log = LoggerFactory.getLogger(CardManager.class);
     private final HashMap<String, Card> loadedCards = new HashMap<>();
     private final DSLContext dslContext;
-    private final MtgApiService mtgApiService = new SimpleMtgApiService();
+    private final MtgApiService mtgApiService;
     private final ExecutorService executorService = Executors.newFixedThreadPool(20);
     private final DownloaderService downloaderService;
+    private final ObservableAtomicCounter currentlyAddedCardsCounter = new SimpleObservableAtomicCounter();
 
-    public CardManager(DSLContext dslContext, DownloaderService downloaderService) {
+    public CardManager(DSLContext dslContext, MtgApiService mtgApiService, DownloaderService downloaderService) {
         this.dslContext = dslContext;
+        this.mtgApiService = mtgApiService;
         this.downloaderService = downloaderService;
+    }
+
+    private Integer getMultiverseId(String cardName) {
+        var record = dslContext.select(NAMESANDMULTIVERSEID.MULTIVERSE_ID)
+                .from(NAMESANDMULTIVERSEID)
+                .where(NAMESANDMULTIVERSEID.NAME.eq(cardName))
+                .fetchOne();
+        return record == null ? null : record.getValue(NAMESANDMULTIVERSEID.MULTIVERSE_ID);
     }
 
     public Card getCard(String cardName) {
@@ -60,29 +71,53 @@ public class CardManager {
 
     public CompletableFuture<Card> addCard(String cardName) {
         return CompletableFuture.supplyAsync(()-> {
-            Card addedCard = putCardInDatabase(cardName);
+            log.debug("Before pinging api");
+//            final Integer multiverseId = getMultiverseId(cardName);
+            CardData cardData;
+//            if (multiverseId != null) {
+//                cardData = mtgApiService.getCardData(multiverseId);
+//            }
+//            else {
+                cardData = mtgApiService.getCardData(cardName);
+//            }
+            log.debug("After pinging api");
+
+            if (cardData == null) {
+//                TODO: write an exception for this
+//                log.debug("Getting multiverse id of card: {}", cardName);
+                final Integer multiverseId = getMultiverseId(cardName);
+//                log.debug("Multiverse id is {}", multiverseId);
+                if (multiverseId == null) {
+                    log.info("Card not found: {}", cardName);
+                    return null;
+                }
+                cardData = new CardData(multiverseId, cardName, "https://gatherer.wizards.com/Handlers/Image.ashx?multiverseid="+multiverseId+"&type=card");
+
+//                cardData = mtgApiService.getCardData(multiverseId);
+//
+//                if (cardData == null) {
+//                    log.info("Card not found: {}", cardName);
+//                    return null;
+//                }
+            }
+
+            Card addedCard = putCardInDatabase(cardData);
             loadedCards.put(cardName, addedCard);
             return addedCard;
         }, executorService);
     }
 
-    private Card putCardInDatabase(String cardName) {
-        log.debug("Before pinging api");
-        CardData cardData = mtgApiService.getCardData(cardName);
-        log.debug("After pinging api");
+    public ObservableAtomicCounter getCurrentlyAddedCardsCounter() {
+        return currentlyAddedCardsCounter;
+    }
 
-        if (cardData == null) {
-//                TODO: write an exception for this
-            log.info("Card not found: {}", cardName);
-            return null;
-        }
-
+    private Card putCardInDatabase(CardData cardData) {
         Result<Record> result = dslContext.select().from(CARDS)
                 .where(CARDS.MULTIVERSE_ID.eq(cardData.multiverseId()))
                 .fetch();
 
         if (!result.isEmpty()) {
-            return getCard(cardName);
+            return getCard(cardData.cardName());
         }
 
         CompletableFuture<String> downloadedImageAddress;
@@ -99,7 +134,7 @@ public class CardManager {
                 .values(cardData.multiverseId(), cardData.cardName(), cardData.imageUrl())
                 .execute();
 
-        downloadedImageAddress.thenAcceptAsync(imageAddress -> dslContext.insertInto(LOCALADDRESSES, LOCALADDRESSES.MULTIVERSE_ID, LOCALADDRESSES.LOCAL_ADDRESS)
+        downloadedImageAddress.thenAccept(imageAddress -> dslContext.insertInto(LOCALADDRESSES, LOCALADDRESSES.MULTIVERSE_ID, LOCALADDRESSES.LOCAL_ADDRESS)
                 .values(cardData.multiverseId(), imageAddress)
                 .execute()).exceptionally(throwable -> {
             log.error("Failed to insert card", throwable);

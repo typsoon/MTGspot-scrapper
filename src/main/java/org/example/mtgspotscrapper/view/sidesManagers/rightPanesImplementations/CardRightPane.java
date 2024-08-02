@@ -1,4 +1,4 @@
-package org.example.mtgspotscrapper.view.rightPanesImplementations;
+package org.example.mtgspotscrapper.view.sidesManagers.rightPanesImplementations;
 
 import javafx.fxml.FXML;
 import javafx.scene.Node;
@@ -11,14 +11,13 @@ import org.example.mtgspotscrapper.viewmodel.eventHandling.eventTypes.userIntera
 import org.example.mtgspotscrapper.viewmodel.eventHandling.eventTypes.userInteractionEventTypes.UpdateAvailabilityEvent;
 import org.example.mtgspotscrapper.viewmodel.eventHandling.records.DeleteCardData;
 import org.example.mtgspotscrapper.viewmodel.CardList;
-import org.example.mtgspotscrapper.viewmodel.DatabaseService;
 
 import java.io.IOException;
 import java.util.Objects;
 
 public class CardRightPane extends AbstractRightPane {
-    public CardRightPane(String fxmlPath, DatabaseService databaseService) throws IOException {
-        super(fxmlPath, databaseService);
+    public CardRightPane(String fxmlPath) throws IOException {
+        super(fxmlPath);
     }
 
     private CardList cardList;
@@ -44,7 +43,7 @@ public class CardRightPane extends AbstractRightPane {
 
         addLabel.setOnMouseClicked(mouseEvent -> {
             addLabel.fireEvent(new AddCardEvent(addDeleteField.getText(), cardList));
-            addLabel.fireEvent(new ShowListEvent(cardList));
+//            addLabel.fireEvent(new ShowListEvent(cardList));
         });
 
         deleteLabel.setOnMouseClicked(mouseEvent -> {

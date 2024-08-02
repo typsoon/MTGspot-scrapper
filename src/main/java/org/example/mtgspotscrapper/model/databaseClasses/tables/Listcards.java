@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
+import org.example.mtgspotscrapper.model.databaseClasses.Indexes;
 import org.example.mtgspotscrapper.model.databaseClasses.Keys;
 import org.example.mtgspotscrapper.model.databaseClasses.Public;
 import org.example.mtgspotscrapper.model.databaseClasses.tables.Cards.CardsPath;
@@ -16,6 +17,7 @@ import org.example.mtgspotscrapper.model.databaseClasses.tables.records.Listcard
 import org.jooq.Condition;
 import org.jooq.Field;
 import org.jooq.ForeignKey;
+import org.jooq.Index;
 import org.jooq.InverseForeignKey;
 import org.jooq.Name;
 import org.jooq.Path;
@@ -131,6 +133,11 @@ public class Listcards extends TableImpl<ListcardsRecord> {
     @Override
     public Schema getSchema() {
         return aliased() ? null : Public.PUBLIC;
+    }
+
+    @Override
+    public List<Index> getIndexes() {
+        return Arrays.asList(Indexes.LISTCARDS_LIST_ID_IDX);
     }
 
     @Override

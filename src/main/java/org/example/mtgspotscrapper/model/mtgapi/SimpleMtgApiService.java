@@ -9,21 +9,25 @@ import io.magicthegathering.javasdk.api.CardAPI;
 import io.magicthegathering.javasdk.resource.Card;
 import org.example.mtgspotscrapper.App;
 import org.example.mtgspotscrapper.model.cardImpl.CardData;
-import org.example.mtgspotscrapper.view.sidesControllers.LeftSideManager;
-import org.example.mtgspotscrapper.view.sidesControllers.RightSideManager;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SimpleMtgApiService implements MtgApiService {
+
+    private static final Logger log = LoggerFactory.getLogger(SimpleMtgApiService.class);
+
     @Override
     public CardData getCardData(String cardName) {
-        return getCardDataBrute(cardName);
-//        return getCardDataFilter(cardName);
+//        return getCardDataBrute(cardName);
+        return getCardDataFilter(cardName);
     }
 
     @Override
     public CardData getCardData(Integer multiverseId) {
         Card answer = CardAPI.getCard(multiverseId);
+        log.debug("Asked for id: {}, retrieved: {}", multiverseId, answer);
         if (answer == null) {
             return null;
         }
@@ -70,19 +74,7 @@ public class SimpleMtgApiService implements MtgApiService {
             connection.setRequestMethod("GET");
 
             // Read the response
-            BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-            StringBuilder response = new StringBuilder();
-            String line;
-            while ((line = in.readLine()) != null) {
-                response.append(line);
-            }
-            in.close();
-
-            // Parse the response to JSON
-            JSONObject jsonResponse = new JSONObject(response.toString());
-
-            // Get the "cards" array
-            JSONArray cardsArray = jsonResponse.getJSONArray("cards");
+            JSONArray cardsArray = getJsonArray(connection);
 //            Collection<JSONObject> filtered = new ArrayList<>();
 
             JSONObject answer = null;
@@ -117,27 +109,27 @@ public class SimpleMtgApiService implements MtgApiService {
         }
     }
 
-    public static void main(String[] args) {
-//        String cardName = "Assassin's Trophy";
-//
-//        Consumer<String> test = what -> {
-//            Pattern nameV1 = Pattern.compile("^" + cardName+ "(\\s\\(.*\\))?$");
-//            Matcher matcher = nameV1.matcher(what);
-//
-//            log.info("Equals: {}, matches: {}", what.equals(cardName), matcher.matches());
-//        };
-//
-//        test.accept("Assassin's Trophy (V.2)");
-//        test.accept("Assassin's Trophy (v.1)");
-//        test.accept("Assassin's Trophy (V.4)");
-//        test.accept("Assassin's Trophy Token");
-//        test.accept("Assassin's Trophy");
+    private static JSONArray getJsonArray(HttpURLConnection connection) throws IOException {
+        try(BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream())))
+        {
+            StringBuilder response = new StringBuilder();
+            String line;
+            while ((line = in.readLine()) != null) {
+                response.append(line);
+            }
+            in.close();
 
-//        MtgApiService mtgApiService = new SimpleMtgApiService();
-//
-//        System.out.println(mtgApiService.getCardData("Wastes"));
-//        System.out.println(mtgApiService.getCardData("Llanowar Elves"));
-//        System.out.println(mtgApiService.getCardData("Black Lotus"));
-//        System.out.println(mtgApiService.getCardData("Beast Within"));
+            // Parse the response to JSON
+            JSONObject jsonResponse = new JSONObject(response.toString());
+
+            // Get the "cards" array
+            return jsonResponse.getJSONArray("cards");
+        }
+    }
+
+    public static void main(String[] args) {
+        MtgApiService mtgApiService = new SimpleMtgApiService();
+        var card = mtgApiService.getCardData(665583);
+        log.debug("Retrieved card: {}", card);
     }
 }

@@ -4,21 +4,18 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.layout.*;
 import org.example.mtgspotscrapper.App;
-import org.example.mtgspotscrapper.view.sidesControllers.LeftSideManager;
-import org.example.mtgspotscrapper.view.sidesControllers.RightSideManager;
+import org.example.mtgspotscrapper.view.sidesManagers.LeftSideManager;
+import org.example.mtgspotscrapper.view.sidesManagers.RightSideManager;
 import org.example.mtgspotscrapper.view.viewEvents.guiEvents.ShowAllListsEvent;
 import org.example.mtgspotscrapper.view.viewEvents.guiEvents.ShowListEvent;
 import org.example.mtgspotscrapper.viewmodel.CardList;
-import org.example.mtgspotscrapper.viewmodel.eventHandling.eventTypes.userInteractionEventTypes.*;
-import org.example.mtgspotscrapper.view.rightPanesImplementations.CardRightPane;
-import org.example.mtgspotscrapper.view.rightPanesImplementations.ListRightPane;
 import org.example.mtgspotscrapper.viewmodel.DatabaseService;
-import org.example.mtgspotscrapper.viewmodel.eventHandling.handlers.*;
 
 import java.io.IOException;
 
 public class ScreenManager {
     private final DatabaseService databaseService;
+
     private LeftSideManager leftSideManager;
     private RightSideManager rightSideManager;
 
@@ -30,6 +27,8 @@ public class ScreenManager {
     @FXML
     private void initialize() {
         leftSideManager = new LeftSideManager(cardsFlowPane, databaseService);
+
+
         try {
             rightSideManager = new RightSideManager(rightContainer, databaseService);
         } catch (IOException e) {

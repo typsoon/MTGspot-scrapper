@@ -8,15 +8,11 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import org.example.mtgspotscrapper.App;
-import org.example.mtgspotscrapper.viewmodel.DatabaseService;
 
 import java.io.IOException;
 
 
 public abstract class AbstractRightPane {
-    @SuppressWarnings({"FieldCanBeLocal", "unused"})
-    private final DatabaseService databaseService;
-
     protected final Node rightPane;
 
     @SuppressWarnings("unused")
@@ -26,6 +22,7 @@ public abstract class AbstractRightPane {
     @FXML
     protected TextField addDeleteField;
 
+    @SuppressWarnings("unused")
     @FXML
     protected Label searchLabel;
 
@@ -50,8 +47,7 @@ public abstract class AbstractRightPane {
     @FXML
     protected abstract void initialize();
 
-    protected AbstractRightPane(String fxmlPath, DatabaseService databaseService) throws IOException {
-        this.databaseService = databaseService;
+    protected AbstractRightPane(String fxmlPath) throws IOException {
 
         FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource(fxmlPath));
         fxmlLoader.setController(this);

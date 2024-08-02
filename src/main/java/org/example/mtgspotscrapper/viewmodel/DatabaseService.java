@@ -1,7 +1,7 @@
 package org.example.mtgspotscrapper.viewmodel;
 
-import java.io.IOException;
-import java.sql.SQLException;
+import org.example.mtgspotscrapper.model.ObservableAtomicCounter;
+
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 
@@ -10,6 +10,7 @@ public interface DatabaseService {
     CardList getCardList(String name);
 
     CompletableFuture<Card> addCard(String cardName);
+    ObservableAtomicCounter getCurrentlyAddedCardsCounter();
     CardList addList(String listName);
 
     boolean deleteList(String listName);

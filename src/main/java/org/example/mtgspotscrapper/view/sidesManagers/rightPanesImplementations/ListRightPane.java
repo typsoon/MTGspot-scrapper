@@ -1,8 +1,7 @@
-package org.example.mtgspotscrapper.view.rightPanesImplementations;
+package org.example.mtgspotscrapper.view.sidesManagers.rightPanesImplementations;
 
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -17,13 +16,12 @@ import org.example.mtgspotscrapper.view.viewEvents.guiEvents.ShowAllListsEvent;
 import org.example.mtgspotscrapper.viewmodel.eventHandling.eventTypes.userInteractionEventTypes.AddListEvent;
 import org.example.mtgspotscrapper.viewmodel.eventHandling.eventTypes.userInteractionEventTypes.DeleteListEvent;
 import org.example.mtgspotscrapper.viewmodel.eventHandling.eventTypes.userInteractionEventTypes.ImportListEvent;
-import org.example.mtgspotscrapper.viewmodel.DatabaseService;
 
 import java.io.IOException;
 
 public class ListRightPane extends AbstractRightPane {
-    public ListRightPane(String fxmlPath, DatabaseService databaseService) throws IOException {
-        super(fxmlPath, databaseService);
+    public ListRightPane(String fxmlPath) throws IOException {
+        super(fxmlPath);
     }
 
     public Node getRightPane() {

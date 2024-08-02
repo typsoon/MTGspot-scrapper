@@ -1,9 +1,9 @@
-package org.example.mtgspotscrapper.view.sidesControllers;
+package org.example.mtgspotscrapper.view.sidesManagers;
 
 import javafx.scene.layout.Pane;
 import org.example.mtgspotscrapper.view.Addresses;
-import org.example.mtgspotscrapper.view.rightPanesImplementations.CardRightPane;
-import org.example.mtgspotscrapper.view.rightPanesImplementations.ListRightPane;
+import org.example.mtgspotscrapper.view.sidesManagers.rightPanesImplementations.CardRightPane;
+import org.example.mtgspotscrapper.view.sidesManagers.rightPanesImplementations.ListRightPane;
 import org.example.mtgspotscrapper.viewmodel.CardList;
 import org.example.mtgspotscrapper.viewmodel.DatabaseService;
 import org.example.mtgspotscrapper.viewmodel.eventHandling.eventTypes.userInteractionEventTypes.*;
@@ -19,8 +19,8 @@ public class RightSideManager {
     public RightSideManager(Pane rightContainer, DatabaseService databaseService) throws IOException {
         this.rightContainer = rightContainer;
 
-        cardRightPaneController = new CardRightPane(Addresses.CARD_RIGHT_PANE, databaseService);
-        listRightPaneController = new ListRightPane(Addresses.LIST_RIGHT_PANE, databaseService);
+        cardRightPaneController = new CardRightPane(Addresses.CARD_RIGHT_PANE);
+        listRightPaneController = new ListRightPane(Addresses.LIST_RIGHT_PANE);
 
         rightContainer.addEventHandler(AddCardEvent.ADD_CARD_EVENT, new AddCardEventHandler(databaseService));
         rightContainer.addEventHandler(AddListEvent.ADD_LIST, new AddListEventHandler(databaseService));

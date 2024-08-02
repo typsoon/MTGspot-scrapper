@@ -9,11 +9,13 @@ import org.example.mtgspotscrapper.model.databaseClasses.tables.Listcards;
 import org.example.mtgspotscrapper.model.databaseClasses.tables.Lists;
 import org.example.mtgspotscrapper.model.databaseClasses.tables.Listslogos;
 import org.example.mtgspotscrapper.model.databaseClasses.tables.Localaddresses;
+import org.example.mtgspotscrapper.model.databaseClasses.tables.Namesandmultiverseid;
 import org.example.mtgspotscrapper.model.databaseClasses.tables.records.CardsRecord;
 import org.example.mtgspotscrapper.model.databaseClasses.tables.records.ListcardsRecord;
 import org.example.mtgspotscrapper.model.databaseClasses.tables.records.ListsRecord;
 import org.example.mtgspotscrapper.model.databaseClasses.tables.records.ListslogosRecord;
 import org.example.mtgspotscrapper.model.databaseClasses.tables.records.LocaladdressesRecord;
+import org.example.mtgspotscrapper.model.databaseClasses.tables.records.NamesandmultiverseidRecord;
 import org.jooq.ForeignKey;
 import org.jooq.TableField;
 import org.jooq.UniqueKey;
@@ -32,6 +34,7 @@ public class Keys {
     // UNIQUE and PRIMARY KEY definitions
     // -------------------------------------------------------------------------
 
+    public static final UniqueKey<CardsRecord> CARDS_CARD_NAME_KEY = Internal.createUniqueKey(Cards.CARDS, DSL.name("cards_card_name_key"), new TableField[] { Cards.CARDS.CARD_NAME }, true);
     public static final UniqueKey<CardsRecord> CARDS_IMAGE_URL_KEY = Internal.createUniqueKey(Cards.CARDS, DSL.name("cards_image_url_key"), new TableField[] { Cards.CARDS.IMAGE_URL }, true);
     public static final UniqueKey<CardsRecord> CARDS_PKEY = Internal.createUniqueKey(Cards.CARDS, DSL.name("cards_pkey"), new TableField[] { Cards.CARDS.MULTIVERSE_ID }, true);
     public static final UniqueKey<ListcardsRecord> LISTCARDS_LIST_ID_MULTIVERSE_ID_KEY = Internal.createUniqueKey(Listcards.LISTCARDS, DSL.name("listcards_list_id_multiverse_id_key"), new TableField[] { Listcards.LISTCARDS.LIST_ID, Listcards.LISTCARDS.MULTIVERSE_ID }, true);
@@ -41,6 +44,8 @@ public class Keys {
     public static final UniqueKey<ListslogosRecord> LISTSLOGOS_PKEY = Internal.createUniqueKey(Listslogos.LISTSLOGOS, DSL.name("listslogos_pkey"), new TableField[] { Listslogos.LISTSLOGOS.LOGO_ID }, true);
     public static final UniqueKey<LocaladdressesRecord> LOCALADDRESSES_LOCAL_ADDRESS_KEY = Internal.createUniqueKey(Localaddresses.LOCALADDRESSES, DSL.name("localaddresses_local_address_key"), new TableField[] { Localaddresses.LOCALADDRESSES.LOCAL_ADDRESS }, true);
     public static final UniqueKey<LocaladdressesRecord> LOCALADDRESSES_PKEY = Internal.createUniqueKey(Localaddresses.LOCALADDRESSES, DSL.name("localaddresses_pkey"), new TableField[] { Localaddresses.LOCALADDRESSES.MULTIVERSE_ID }, true);
+    public static final UniqueKey<NamesandmultiverseidRecord> NAMESANDMULTIVERSEID_NAME_KEY = Internal.createUniqueKey(Namesandmultiverseid.NAMESANDMULTIVERSEID, DSL.name("namesandmultiverseid_name_key"), new TableField[] { Namesandmultiverseid.NAMESANDMULTIVERSEID.NAME }, true);
+    public static final UniqueKey<NamesandmultiverseidRecord> NAMESANDMULTIVERSEID_PKEY = Internal.createUniqueKey(Namesandmultiverseid.NAMESANDMULTIVERSEID, DSL.name("namesandmultiverseid_pkey"), new TableField[] { Namesandmultiverseid.NAMESANDMULTIVERSEID.MULTIVERSE_ID }, true);
 
     // -------------------------------------------------------------------------
     // FOREIGN KEY definitions

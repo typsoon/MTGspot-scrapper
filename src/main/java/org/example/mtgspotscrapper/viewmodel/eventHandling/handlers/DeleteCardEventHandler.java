@@ -7,8 +7,6 @@ import org.example.mtgspotscrapper.viewmodel.DatabaseService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.SQLException;
-
 public class DeleteCardEventHandler extends MyEventHandler<DeleteCardEvent> {
     protected static Logger deleteCardLogger = LoggerFactory.getLogger(DeleteListEventHandler.class);
 

@@ -1,13 +1,15 @@
 package org.example.mtgspotscrapper.model;
 
 import org.example.mtgspotscrapper.model.cardImpl.CardManager;
+import org.example.mtgspotscrapper.model.downloader.SimpleDownloaderService;
 import org.example.mtgspotscrapper.model.listImpl.ListData;
 import org.example.mtgspotscrapper.model.listImpl.SimpleCardList;
+import org.example.mtgspotscrapper.model.mtgapi.MtgApiService;
+import org.example.mtgspotscrapper.model.mtgapi.SimpleMtgApiService;
 import org.example.mtgspotscrapper.viewmodel.Card;
 import org.example.mtgspotscrapper.viewmodel.CardList;
 import org.example.mtgspotscrapper.viewmodel.DatabaseService;
 import org.example.mtgspotscrapper.viewmodel.DownloaderService;
-
 
 import static org.example.mtgspotscrapper.model.databaseClasses.Tables.*;
 
@@ -28,14 +30,14 @@ public class PSQLDatabaseService implements DatabaseService {
     private final DSLContext dslContext;
     private final CardManager cardManager;
 
-    public PSQLDatabaseService(String url, String user, String password, DownloaderService downloaderService, boolean executeJooqLogging) throws SQLException {
+    public PSQLDatabaseService(String url, String user, String password, DownloaderService downloaderService, MtgApiService mtgApiService, boolean executeJooqLogging) throws SQLException {
         Connection connection = DriverManager.getConnection(url, user, password);
 
         Settings settings = new Settings()
                 .withExecuteLogging(executeJooqLogging);
 
         dslContext = DSL.using(connection, SQLDialect.POSTGRES, settings);
-        cardManager = new CardManager(dslContext, downloaderService);
+        cardManager = new CardManager(dslContext, mtgApiService, downloaderService);
     }
 
     @Override
@@ -99,6 +101,11 @@ public class PSQLDatabaseService implements DatabaseService {
     }
 
     @Override
+    public ObservableAtomicCounter getCurrentlyAddedCardsCounter() {
+        return cardManager.getCurrentlyAddedCardsCounter();
+    }
+
+    @Override
     public boolean deleteList(String listName) {
         Result<Record1<Integer>> lists = dslContext.selectDistinct(LISTS.LIST_ID).from(LISTS)
                 .where(LISTS.LIST_NAME.eq(listName))
@@ -122,31 +129,5 @@ public class PSQLDatabaseService implements DatabaseService {
     @Override
     public Card getCard(String cardName) {
         return cardManager.getCard(cardName);
-    }
-
-
-    public static void main(String[] args) {
-        try {
-            DatabaseService databaseService = new PSQLDatabaseService("jdbc:postgresql://localhost/scrapper", "scrapper", "aaa", new SimpleDownloaderService(), true);
-            log.debug(databaseService.getAllLists().toString());
-//            log.debug(databaseService.getAllCardsData().toString());
-            log.debug(databaseService.getCardList("test list").toString());
-            log.debug(databaseService.addCard("Kodama's Reach").toString());
-            log.debug(databaseService.addCard("Swords to Plowshares").toString());
-            log.debug(databaseService.addCard("Kenrith, the Returned King").toString());
-            log.debug(databaseService.addCard("Path to Exile").toString());
-
-//            Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost/scrapper", "scrapper", "aaa");
-//            DSLContext dslContext = DSL.using(conn, SQLDialect.POSTGRES);
-//            Result<Record> temp = dslContext.select().from(CARDS).fetch();
-//            System.out.println(temp.getClass());
-//
-//            for (Record record : temp) {
-//                System.out.println(record.getValue(CARDS.MULTIVERSE_ID));
-//            }
-
-        } catch (SQLException e) {
-            log.error("Something went wrong", e);
-        }
     }
 }

@@ -48,14 +48,24 @@ public class Fulllistdata extends TableImpl<FulllistdataRecord> {
     }
 
     /**
+     * The column <code>public.fulllistdata.multiverse_id</code>.
+     */
+    public final TableField<FulllistdataRecord, Integer> MULTIVERSE_ID = createField(DSL.name("multiverse_id"), SQLDataType.INTEGER, this, "");
+
+    /**
      * The column <code>public.fulllistdata.list_id</code>.
      */
     public final TableField<FulllistdataRecord, Integer> LIST_ID = createField(DSL.name("list_id"), SQLDataType.INTEGER, this, "");
 
     /**
-     * The column <code>public.fulllistdata.multiverse_id</code>.
+     * The column <code>public.fulllistdata.list_name</code>.
      */
-    public final TableField<FulllistdataRecord, Integer> MULTIVERSE_ID = createField(DSL.name("multiverse_id"), SQLDataType.INTEGER, this, "");
+    public final TableField<FulllistdataRecord, String> LIST_NAME = createField(DSL.name("list_name"), SQLDataType.VARCHAR, this, "");
+
+    /**
+     * The column <code>public.fulllistdata.logo_id</code>.
+     */
+    public final TableField<FulllistdataRecord, Integer> LOGO_ID = createField(DSL.name("logo_id"), SQLDataType.INTEGER, this, "");
 
     /**
      * The column <code>public.fulllistdata.card_name</code>.
@@ -82,34 +92,24 @@ public class Fulllistdata extends TableImpl<FulllistdataRecord> {
      */
     public final TableField<FulllistdataRecord, String> LOCAL_ADDRESS = createField(DSL.name("local_address"), SQLDataType.VARCHAR, this, "");
 
-    /**
-     * The column <code>public.fulllistdata.list_name</code>.
-     */
-    public final TableField<FulllistdataRecord, String> LIST_NAME = createField(DSL.name("list_name"), SQLDataType.VARCHAR, this, "");
-
-    /**
-     * The column <code>public.fulllistdata.logo_id</code>.
-     */
-    public final TableField<FulllistdataRecord, Integer> LOGO_ID = createField(DSL.name("logo_id"), SQLDataType.INTEGER, this, "");
-
     private Fulllistdata(Name alias, Table<FulllistdataRecord> aliased) {
         this(alias, aliased, (Field<?>[]) null, null);
     }
 
     private Fulllistdata(Name alias, Table<FulllistdataRecord> aliased, Field<?>[] parameters, Condition where) {
         super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.view("""
-        create view "fulllistdata" as  SELECT listcards.list_id,
-         fullcarddata.multiverse_id,
+        create view "fulllistdata" as  SELECT listcards.multiverse_id,
+         lists.list_id,
+         lists.list_name,
+         lists.logo_id,
          fullcarddata.card_name,
          fullcarddata.previous_price,
          fullcarddata.actual_price,
          fullcarddata.image_url,
-         fullcarddata.local_address,
-         lists.list_name,
-         lists.logo_id
-        FROM ((fullcarddata
-          JOIN listcards USING (multiverse_id))
-          JOIN lists USING (list_id));
+         fullcarddata.local_address
+        FROM ((lists
+          JOIN listcards USING (list_id))
+          JOIN fullcarddata USING (multiverse_id));
         """), where);
     }
 

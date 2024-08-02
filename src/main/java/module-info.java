@@ -15,12 +15,13 @@ module org.example.mtgspotscrapper {
     requires org.controlsfx.controls;
     requires org.jooq;
     requires jdk.security.auth;
+    requires com.fasterxml.jackson.core;
 //    requires org.apache.commons.csv;
 
     opens org.example.mtgspotscrapper.view to javafx.fxml;
 
     exports org.example.mtgspotscrapper;
     exports org.example.mtgspotscrapper.model.databaseClasses.tables.records;
-    opens org.example.mtgspotscrapper.view.rightPanesImplementations to javafx.fxml;
+    opens org.example.mtgspotscrapper.view.sidesManagers.rightPanesImplementations to javafx.fxml;
     opens org.example.mtgspotscrapper.view.cardLogoAndNameImpl to javafx.fxml;
 }

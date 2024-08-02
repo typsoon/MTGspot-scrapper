@@ -14,6 +14,7 @@ import org.example.mtgspotscrapper.model.databaseClasses.tables.Listcards;
 import org.example.mtgspotscrapper.model.databaseClasses.tables.Lists;
 import org.example.mtgspotscrapper.model.databaseClasses.tables.Listslogos;
 import org.example.mtgspotscrapper.model.databaseClasses.tables.Localaddresses;
+import org.example.mtgspotscrapper.model.databaseClasses.tables.Namesandmultiverseid;
 import org.jooq.Catalog;
 import org.jooq.Table;
 import org.jooq.impl.SchemaImpl;
@@ -68,6 +69,11 @@ public class Public extends SchemaImpl {
     public final Localaddresses LOCALADDRESSES = Localaddresses.LOCALADDRESSES;
 
     /**
+     * The table <code>public.namesandmultiverseid</code>.
+     */
+    public final Namesandmultiverseid NAMESANDMULTIVERSEID = Namesandmultiverseid.NAMESANDMULTIVERSEID;
+
+    /**
      * No further instances allowed
      */
     private Public() {
@@ -89,7 +95,8 @@ public class Public extends SchemaImpl {
             Listcards.LISTCARDS,
             Lists.LISTS,
             Listslogos.LISTSLOGOS,
-            Localaddresses.LOCALADDRESSES
+            Localaddresses.LOCALADDRESSES,
+            Namesandmultiverseid.NAMESANDMULTIVERSEID
         );
     }
 }

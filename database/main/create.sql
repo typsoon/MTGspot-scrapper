@@ -41,4 +41,10 @@ CREATE OR REPLACE VIEW FullListData AS (
         JOIN FullCardData using(multiverse_id)
 );
 
+CREATE TABLE NamesAndMultiverseID (
+    multiverse_id INTEGER primary key ,
+    name VARCHAR UNIQUE NOT NULL
+);
+CREATE UNIQUE INDEX ON NamesAndMultiverseID(name);
+
 INSERT INTO Lists(list_name) VALUES ('Collection');

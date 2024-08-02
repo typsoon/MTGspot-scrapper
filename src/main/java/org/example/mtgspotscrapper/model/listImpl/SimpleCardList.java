@@ -1,5 +1,6 @@
 package org.example.mtgspotscrapper.model.listImpl;
 
+import org.example.mtgspotscrapper.model.ObservableAtomicCounter;
 import org.example.mtgspotscrapper.model.cardImpl.CardManager;
 import org.example.mtgspotscrapper.model.cardImpl.CardData;
 import org.example.mtgspotscrapper.viewmodel.Card;
@@ -17,10 +18,14 @@ public class SimpleCardList implements CardList {
     private final DSLContext dslContext;
     private final CardManager cardManager;
 
+    private final ObservableAtomicCounter currentlyAddedCardsCounter;
+
     public SimpleCardList(ListData listData, DSLContext dslContext, CardManager cardManager) {
         this.listData = listData;
         this.dslContext = dslContext;
         this.cardManager = cardManager;
+
+        currentlyAddedCardsCounter = cardManager.getCurrentlyAddedCardsCounter();
     }
 
     @Override
@@ -49,9 +54,13 @@ public class SimpleCardList implements CardList {
             return;
         }
 
+        currentlyAddedCardsCounter.increment();
+
         dslContext.insertInto(LISTCARDS, LISTCARDS.LIST_ID, LISTCARDS.MULTIVERSE_ID)
                 .values(listData.id(), card.getCardData().multiverseId())
                 .execute();
+
+        currentlyAddedCardsCounter.decrement();
     }
 
     @Override

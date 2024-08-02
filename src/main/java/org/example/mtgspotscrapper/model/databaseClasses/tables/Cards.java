@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
+import org.example.mtgspotscrapper.model.databaseClasses.Indexes;
 import org.example.mtgspotscrapper.model.databaseClasses.Keys;
 import org.example.mtgspotscrapper.model.databaseClasses.Public;
 import org.example.mtgspotscrapper.model.databaseClasses.tables.Listcards.ListcardsPath;
@@ -19,6 +20,7 @@ import org.jooq.Check;
 import org.jooq.Condition;
 import org.jooq.Field;
 import org.jooq.ForeignKey;
+import org.jooq.Index;
 import org.jooq.InverseForeignKey;
 import org.jooq.Name;
 import org.jooq.Path;
@@ -153,13 +155,18 @@ public class Cards extends TableImpl<CardsRecord> {
     }
 
     @Override
+    public List<Index> getIndexes() {
+        return Arrays.asList(Indexes.CARDS_CARD_NAME_IDX);
+    }
+
+    @Override
     public UniqueKey<CardsRecord> getPrimaryKey() {
         return Keys.CARDS_PKEY;
     }
 
     @Override
     public List<UniqueKey<CardsRecord>> getUniqueKeys() {
-        return Arrays.asList(Keys.CARDS_IMAGE_URL_KEY);
+        return Arrays.asList(Keys.CARDS_CARD_NAME_KEY, Keys.CARDS_IMAGE_URL_KEY);
     }
 
     private transient ListcardsPath _listcards;
