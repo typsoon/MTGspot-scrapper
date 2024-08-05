@@ -15,6 +15,7 @@
         <selenium.version>4.23.0</selenium.version>
         <psql.username>scrapper</psql.username>
         <psql.password>aaa</psql.password>
+        <psql.schema>scrapper</psql.schema>
     </properties>
 
     <dependencies>
@@ -53,6 +54,12 @@
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
             <version>2.17.2</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-csv</artifactId>
+            <version>1.10.0</version>
         </dependency>
 
         <dependency>
@@ -199,13 +206,18 @@
 
                             <!-- The database schema (or in the absence of schema support, in your RDBMS this
                                  can be the owner, user, database name) to be generated -->
-                            <inputSchema>public</inputSchema>
+                            <inputSchema>${psql.schema}</inputSchema>
 
                             <!-- All elements that are generated from your schema
                                  (A Java regular expression. Use the pipe to separate several expressions)
                                  Watch out for case-sensitivity. Depending on your database, this might be important! -->
-                            <includes>.*</includes>
+<!--                            <includes>.*</includes>-->
 
+                            <includeSql>
+                                select table_schema || '\.' || table_name
+                                from information_schema.tables
+                                where table_type = 'VIEW'
+                            </includeSql>
                             <!-- All elements that are excluded from your schema
                                  (A Java regular expression. Use the pipe to separate several expressions).
                                  Excludes match before includes, i.e. excludes have a higher priority -->

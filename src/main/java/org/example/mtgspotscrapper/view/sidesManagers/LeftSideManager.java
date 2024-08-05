@@ -2,7 +2,6 @@ package org.example.mtgspotscrapper.view.sidesManagers;
 
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.layout.FlowPane;
 import org.example.mtgspotscrapper.App;
@@ -11,15 +10,12 @@ import org.example.mtgspotscrapper.view.cardLogoAndNameImpl.CardItemController;
 import org.example.mtgspotscrapper.view.cardLogoAndNameImpl.ListItemController;
 import org.example.mtgspotscrapper.viewmodel.CardList;
 import org.example.mtgspotscrapper.viewmodel.DatabaseService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Objects;
 
 public class LeftSideManager {
-    private static final Logger log = LoggerFactory.getLogger(LeftSideManager.class);
     private final FlowPane cardsFlowPane;
     private final DatabaseService databaseService;
 

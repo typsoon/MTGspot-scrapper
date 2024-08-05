@@ -6,7 +6,6 @@ import org.example.mtgspotscrapper.model.cardImpl.CardData;
 import org.example.mtgspotscrapper.viewmodel.Card;
 import org.example.mtgspotscrapper.viewmodel.CardList;
 import org.jooq.DSLContext;
-import org.jooq.Record1;
 
 import static org.example.mtgspotscrapper.model.databaseClasses.Tables.*;
 
@@ -56,7 +55,7 @@ public class SimpleCardList implements CardList {
 
         currentlyAddedCardsCounter.increment();
 
-        dslContext.insertInto(LISTCARDS, LISTCARDS.LIST_ID, LISTCARDS.MULTIVERSE_ID)
+        dslContext.insertInto(FULLLISTDATA, FULLLISTDATA.LIST_ID, FULLLISTDATA.MULTIVERSE_ID)
                 .values(listData.id(), card.getCardData().multiverseId())
                 .execute();
 
@@ -65,18 +64,21 @@ public class SimpleCardList implements CardList {
 
     @Override
     public boolean deleteCardFromList(String cardName) {
-        Record1<Integer> wrappedCardId = dslContext.select(CARDS.MULTIVERSE_ID)
-                .from(CARDS)
-                .where(CARDS.CARD_NAME.eq(cardName))
-                .fetchOne();
+        var result = dslContext.select(FULLLISTDATA.MULTIVERSE_ID)
+                .from(FULLLISTDATA)
+                .where(FULLLISTDATA.LIST_ID.eq(listData.id()))
+                .and(FULLLISTDATA.CARD_NAME.eq(cardName))
+                .fetch();
 
-        if (wrappedCardId == null) {
+        if(result.isEmpty()) {
             return false;
         }
 
-        dslContext.deleteFrom(LISTCARDS)
-                .where(LISTCARDS.MULTIVERSE_ID.eq(wrappedCardId.getValue(CARDS.MULTIVERSE_ID)))
+        dslContext.deleteFrom(FULLLISTDATA)
+                .where(FULLLISTDATA.LIST_ID.eq(listData.id()))
+                .and(FULLLISTDATA.CARD_NAME.eq(cardName))
                 .execute();
+
         return true;
     }
 

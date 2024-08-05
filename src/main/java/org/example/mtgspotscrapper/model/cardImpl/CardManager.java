@@ -20,7 +20,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import static org.example.mtgspotscrapper.model.databaseClasses.Tables.*;
-import static org.example.mtgspotscrapper.model.databaseClasses.Tables.FULLCARDDATA;
 
 public class CardManager {
     private static final Logger log = LoggerFactory.getLogger(CardManager.class);
@@ -38,11 +37,11 @@ public class CardManager {
     }
 
     private Integer getMultiverseId(String cardName) {
-        var record = dslContext.select(NAMESANDMULTIVERSEID.MULTIVERSE_ID)
-                .from(NAMESANDMULTIVERSEID)
-                .where(NAMESANDMULTIVERSEID.NAME.eq(cardName))
+        var record = dslContext.select(ALLCARDSVIEW.MULTIVERSE_ID)
+                .from(ALLCARDSVIEW)
+                .where(ALLCARDSVIEW.CARD_NAME.eq(cardName))
                 .fetchOne();
-        return record == null ? null : record.getValue(NAMESANDMULTIVERSEID.MULTIVERSE_ID);
+        return record == null ? null : record.getValue(ALLCARDSVIEW.MULTIVERSE_ID);
     }
 
     public Card getCard(String cardName) {
@@ -50,8 +49,8 @@ public class CardManager {
             return loadedCards.get(cardName);
         }
 
-        Result<Record> cards = dslContext.select().from(FULLCARDDATA)
-                .where(FULLCARDDATA.CARD_NAME.eq(cardName))
+        Result<Record> cards = dslContext.select().from(FULLDOWNLOADEDCARDDATA)
+                .where(FULLDOWNLOADEDCARDDATA.CARD_NAME.eq(cardName))
                 .fetch();
 
         if (cards.isEmpty()) {
@@ -65,8 +64,8 @@ public class CardManager {
         Record card = cards.getFirst();
 
         return new SimpleCard(
-                new CardData(card.getValue(FULLCARDDATA.MULTIVERSE_ID), card.getValue(FULLCARDDATA.CARD_NAME), card.getValue(FULLCARDDATA.IMAGE_URL)),
-                CompletableFuture.completedFuture(card.getValue(FULLCARDDATA.LOCAL_ADDRESS)), dslContext);
+                new CardData(card.getValue(FULLDOWNLOADEDCARDDATA.MULTIVERSE_ID), card.getValue(FULLDOWNLOADEDCARDDATA.CARD_NAME), card.getValue(FULLDOWNLOADEDCARDDATA.IMAGE_URL)),
+                CompletableFuture.completedFuture(card.getValue(FULLDOWNLOADEDCARDDATA.LOCAL_ADDRESS)), dslContext);
     }
 
     public CompletableFuture<Card> addCard(String cardName) {
@@ -104,7 +103,10 @@ public class CardManager {
             Card addedCard = putCardInDatabase(cardData);
             loadedCards.put(cardName, addedCard);
             return addedCard;
-        }, executorService);
+        }, executorService).exceptionally(throwable -> {
+            log.error("Error while adding card", throwable);
+            return null;
+        });
     }
 
     public ObservableAtomicCounter getCurrentlyAddedCardsCounter() {
@@ -112,8 +114,8 @@ public class CardManager {
     }
 
     private Card putCardInDatabase(CardData cardData) {
-        Result<Record> result = dslContext.select().from(CARDS)
-                .where(CARDS.MULTIVERSE_ID.eq(cardData.multiverseId()))
+        Result<Record> result = dslContext.select().from(FULLDOWNLOADEDCARDDATA)
+                .where(FULLDOWNLOADEDCARDDATA.MULTIVERSE_ID.eq(cardData.multiverseId()))
                 .fetch();
 
         if (!result.isEmpty()) {
@@ -130,11 +132,11 @@ public class CardManager {
             throw new RuntimeException(e);
         }
 
-        dslContext.insertInto(CARDS, CARDS.MULTIVERSE_ID, CARDS.CARD_NAME, CARDS.IMAGE_URL)
+        dslContext.insertInto(FULLDOWNLOADEDCARDDATA, FULLDOWNLOADEDCARDDATA.MULTIVERSE_ID, FULLDOWNLOADEDCARDDATA.CARD_NAME, FULLDOWNLOADEDCARDDATA.IMAGE_URL)
                 .values(cardData.multiverseId(), cardData.cardName(), cardData.imageUrl())
                 .execute();
 
-        downloadedImageAddress.thenAccept(imageAddress -> dslContext.insertInto(LOCALADDRESSES, LOCALADDRESSES.MULTIVERSE_ID, LOCALADDRESSES.LOCAL_ADDRESS)
+        downloadedImageAddress.thenAccept(imageAddress -> dslContext.insertInto(CARDSIMAGESADDRESSES, CARDSIMAGESADDRESSES.MULTIVERSE_ID, CARDSIMAGESADDRESSES.LOCAL_ADDRESS)
                 .values(cardData.multiverseId(), imageAddress)
                 .execute()).exceptionally(throwable -> {
             log.error("Failed to insert card", throwable);

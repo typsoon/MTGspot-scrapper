@@ -16,6 +16,7 @@ module org.example.mtgspotscrapper {
     requires org.jooq;
     requires jdk.security.auth;
     requires com.fasterxml.jackson.core;
+    requires org.apache.commons.csv;
 //    requires org.apache.commons.csv;
 
     opens org.example.mtgspotscrapper.view to javafx.fxml;

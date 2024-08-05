@@ -4,59 +4,47 @@
 package org.example.mtgspotscrapper.model.databaseClasses;
 
 
-import org.example.mtgspotscrapper.model.databaseClasses.tables.Cards;
-import org.example.mtgspotscrapper.model.databaseClasses.tables.Fullcarddata;
+import org.example.mtgspotscrapper.model.databaseClasses.tables.Allcardsview;
+import org.example.mtgspotscrapper.model.databaseClasses.tables.Cardsimagesaddresses;
+import org.example.mtgspotscrapper.model.databaseClasses.tables.Cardswithprices;
+import org.example.mtgspotscrapper.model.databaseClasses.tables.Fulldownloadedcarddata;
 import org.example.mtgspotscrapper.model.databaseClasses.tables.Fulllistdata;
-import org.example.mtgspotscrapper.model.databaseClasses.tables.Listcards;
-import org.example.mtgspotscrapper.model.databaseClasses.tables.Lists;
-import org.example.mtgspotscrapper.model.databaseClasses.tables.Listslogos;
-import org.example.mtgspotscrapper.model.databaseClasses.tables.Localaddresses;
-import org.example.mtgspotscrapper.model.databaseClasses.tables.Namesandmultiverseid;
+import org.example.mtgspotscrapper.model.databaseClasses.tables.Listswithlogos;
 
 
 /**
- * Convenience access to all tables in public.
+ * Convenience access to all tables in scrapper.
  */
 @SuppressWarnings({ "all", "unchecked", "rawtypes", "this-escape" })
 public class Tables {
 
     /**
-     * The table <code>public.cards</code>.
+     * The table <code>scrapper.allcardsview</code>.
      */
-    public static final Cards CARDS = Cards.CARDS;
+    public static final Allcardsview ALLCARDSVIEW = Allcardsview.ALLCARDSVIEW;
 
     /**
-     * The table <code>public.fullcarddata</code>.
+     * The table <code>scrapper.cardsimagesaddresses</code>.
      */
-    public static final Fullcarddata FULLCARDDATA = Fullcarddata.FULLCARDDATA;
+    public static final Cardsimagesaddresses CARDSIMAGESADDRESSES = Cardsimagesaddresses.CARDSIMAGESADDRESSES;
 
     /**
-     * The table <code>public.fulllistdata</code>.
+     * The table <code>scrapper.cardswithprices</code>.
+     */
+    public static final Cardswithprices CARDSWITHPRICES = Cardswithprices.CARDSWITHPRICES;
+
+    /**
+     * The table <code>scrapper.fulldownloadedcarddata</code>.
+     */
+    public static final Fulldownloadedcarddata FULLDOWNLOADEDCARDDATA = Fulldownloadedcarddata.FULLDOWNLOADEDCARDDATA;
+
+    /**
+     * The table <code>scrapper.fulllistdata</code>.
      */
     public static final Fulllistdata FULLLISTDATA = Fulllistdata.FULLLISTDATA;
 
     /**
-     * The table <code>public.listcards</code>.
+     * The table <code>scrapper.listswithlogos</code>.
      */
-    public static final Listcards LISTCARDS = Listcards.LISTCARDS;
-
-    /**
-     * The table <code>public.lists</code>.
-     */
-    public static final Lists LISTS = Lists.LISTS;
-
-    /**
-     * The table <code>public.listslogos</code>.
-     */
-    public static final Listslogos LISTSLOGOS = Listslogos.LISTSLOGOS;
-
-    /**
-     * The table <code>public.localaddresses</code>.
-     */
-    public static final Localaddresses LOCALADDRESSES = Localaddresses.LOCALADDRESSES;
-
-    /**
-     * The table <code>public.namesandmultiverseid</code>.
-     */
-    public static final Namesandmultiverseid NAMESANDMULTIVERSEID = Namesandmultiverseid.NAMESANDMULTIVERSEID;
+    public static final Listswithlogos LISTSWITHLOGOS = Listswithlogos.LISTSWITHLOGOS;
 }

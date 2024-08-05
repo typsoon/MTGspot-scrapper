@@ -7,7 +7,7 @@ package org.example.mtgspotscrapper.model.databaseClasses.tables;
 import java.math.BigDecimal;
 import java.util.Collection;
 
-import org.example.mtgspotscrapper.model.databaseClasses.Public;
+import org.example.mtgspotscrapper.model.databaseClasses.Scrapper;
 import org.example.mtgspotscrapper.model.databaseClasses.tables.records.FulllistdataRecord;
 import org.jooq.Condition;
 import org.jooq.Field;
@@ -35,7 +35,7 @@ public class Fulllistdata extends TableImpl<FulllistdataRecord> {
     private static final long serialVersionUID = 1L;
 
     /**
-     * The reference instance of <code>public.fulllistdata</code>
+     * The reference instance of <code>scrapper.fulllistdata</code>
      */
     public static final Fulllistdata FULLLISTDATA = new Fulllistdata();
 
@@ -48,47 +48,47 @@ public class Fulllistdata extends TableImpl<FulllistdataRecord> {
     }
 
     /**
-     * The column <code>public.fulllistdata.multiverse_id</code>.
+     * The column <code>scrapper.fulllistdata.multiverse_id</code>.
      */
     public final TableField<FulllistdataRecord, Integer> MULTIVERSE_ID = createField(DSL.name("multiverse_id"), SQLDataType.INTEGER, this, "");
 
     /**
-     * The column <code>public.fulllistdata.list_id</code>.
+     * The column <code>scrapper.fulllistdata.list_id</code>.
      */
     public final TableField<FulllistdataRecord, Integer> LIST_ID = createField(DSL.name("list_id"), SQLDataType.INTEGER, this, "");
 
     /**
-     * The column <code>public.fulllistdata.list_name</code>.
+     * The column <code>scrapper.fulllistdata.list_name</code>.
      */
     public final TableField<FulllistdataRecord, String> LIST_NAME = createField(DSL.name("list_name"), SQLDataType.VARCHAR, this, "");
 
     /**
-     * The column <code>public.fulllistdata.logo_id</code>.
+     * The column <code>scrapper.fulllistdata.logo_id</code>.
      */
     public final TableField<FulllistdataRecord, Integer> LOGO_ID = createField(DSL.name("logo_id"), SQLDataType.INTEGER, this, "");
 
     /**
-     * The column <code>public.fulllistdata.card_name</code>.
-     */
-    public final TableField<FulllistdataRecord, String> CARD_NAME = createField(DSL.name("card_name"), SQLDataType.VARCHAR, this, "");
-
-    /**
-     * The column <code>public.fulllistdata.previous_price</code>.
+     * The column <code>scrapper.fulllistdata.previous_price</code>.
      */
     public final TableField<FulllistdataRecord, BigDecimal> PREVIOUS_PRICE = createField(DSL.name("previous_price"), SQLDataType.NUMERIC(4, 2), this, "");
 
     /**
-     * The column <code>public.fulllistdata.actual_price</code>.
+     * The column <code>scrapper.fulllistdata.actual_price</code>.
      */
     public final TableField<FulllistdataRecord, BigDecimal> ACTUAL_PRICE = createField(DSL.name("actual_price"), SQLDataType.NUMERIC(4, 2), this, "");
 
     /**
-     * The column <code>public.fulllistdata.image_url</code>.
+     * The column <code>scrapper.fulllistdata.image_url</code>.
      */
     public final TableField<FulllistdataRecord, String> IMAGE_URL = createField(DSL.name("image_url"), SQLDataType.VARCHAR, this, "");
 
     /**
-     * The column <code>public.fulllistdata.local_address</code>.
+     * The column <code>scrapper.fulllistdata.card_name</code>.
+     */
+    public final TableField<FulllistdataRecord, String> CARD_NAME = createField(DSL.name("card_name"), SQLDataType.VARCHAR, this, "");
+
+    /**
+     * The column <code>scrapper.fulllistdata.local_address</code>.
      */
     public final TableField<FulllistdataRecord, String> LOCAL_ADDRESS = createField(DSL.name("local_address"), SQLDataType.VARCHAR, this, "");
 
@@ -102,33 +102,33 @@ public class Fulllistdata extends TableImpl<FulllistdataRecord> {
          lists.list_id,
          lists.list_name,
          lists.logo_id,
-         fullcarddata.card_name,
-         fullcarddata.previous_price,
-         fullcarddata.actual_price,
-         fullcarddata.image_url,
-         fullcarddata.local_address
+         fulldownloadedcarddata.previous_price,
+         fulldownloadedcarddata.actual_price,
+         fulldownloadedcarddata.image_url,
+         fulldownloadedcarddata.card_name,
+         fulldownloadedcarddata.local_address
         FROM ((lists
           JOIN listcards USING (list_id))
-          JOIN fullcarddata USING (multiverse_id));
+          JOIN fulldownloadedcarddata USING (multiverse_id));
         """), where);
     }
 
     /**
-     * Create an aliased <code>public.fulllistdata</code> table reference
+     * Create an aliased <code>scrapper.fulllistdata</code> table reference
      */
     public Fulllistdata(String alias) {
         this(DSL.name(alias), FULLLISTDATA);
     }
 
     /**
-     * Create an aliased <code>public.fulllistdata</code> table reference
+     * Create an aliased <code>scrapper.fulllistdata</code> table reference
      */
     public Fulllistdata(Name alias) {
         this(alias, FULLLISTDATA);
     }
 
     /**
-     * Create a <code>public.fulllistdata</code> table reference
+     * Create a <code>scrapper.fulllistdata</code> table reference
      */
     public Fulllistdata() {
         this(DSL.name("fulllistdata"), null);
@@ -136,7 +136,7 @@ public class Fulllistdata extends TableImpl<FulllistdataRecord> {
 
     @Override
     public Schema getSchema() {
-        return aliased() ? null : Public.PUBLIC;
+        return aliased() ? null : Scrapper.SCRAPPER;
     }
 
     @Override

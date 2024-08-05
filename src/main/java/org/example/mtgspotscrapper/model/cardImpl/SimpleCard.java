@@ -42,13 +42,13 @@ public class SimpleCard implements Card {
         }
 
         if (cachedActPrice == null) {
-            cachedActPrice = Objects.requireNonNull(dslContext.select(CARDS.PREVIOUS_PRICE, CARDS.ACTUAL_PRICE)
-                            .from(CARDS)
-                            .where(CARDS.MULTIVERSE_ID.eq(cardData.multiverseId()))
+            cachedActPrice = Objects.requireNonNull(dslContext.select(FULLDOWNLOADEDCARDDATA.PREVIOUS_PRICE, FULLDOWNLOADEDCARDDATA.ACTUAL_PRICE)
+                            .from(FULLDOWNLOADEDCARDDATA)
+                            .where(FULLDOWNLOADEDCARDDATA.MULTIVERSE_ID.eq(cardData.multiverseId()))
                             .fetchOne())
                     .map(priceRecord -> new CardPrice(
-                            nullsafeBigDecToDouble(priceRecord.getValue(CARDS.PREVIOUS_PRICE)),
-                            nullsafeBigDecToDouble(priceRecord.getValue(CARDS.ACTUAL_PRICE))));
+                            nullsafeBigDecToDouble(priceRecord.getValue(FULLDOWNLOADEDCARDDATA.PREVIOUS_PRICE)),
+                            nullsafeBigDecToDouble(priceRecord.getValue(FULLDOWNLOADEDCARDDATA.ACTUAL_PRICE))));
         }
 
         return cachedActPrice;
@@ -89,10 +89,10 @@ public class SimpleCard implements Card {
 
         final double actCardPrice = getActCardPrice().actPrice();
 
-        dslContext.update(CARDS)
-                .set(CARDS.PREVIOUS_PRICE, CARDS.ACTUAL_PRICE)
-                .set(CARDS.ACTUAL_PRICE, newActCardPrice != null ? new BigDecimal(newActCardPrice) : null)
-                .where(CARDS.MULTIVERSE_ID.eq(cardData.multiverseId()))
+        dslContext.update(CARDSWITHPRICES)
+                .set(CARDSWITHPRICES.PREVIOUS_PRICE, CARDSWITHPRICES.ACTUAL_PRICE)
+                .set(CARDSWITHPRICES.ACTUAL_PRICE, newActCardPrice != null ? new BigDecimal(newActCardPrice) : null)
+                .where(CARDSWITHPRICES.MULTIVERSE_ID.eq(cardData.multiverseId()))
                 .execute();
 
         return new CardPrice(actCardPrice, newActCardPrice != null ? newActCardPrice : actCardPrice);

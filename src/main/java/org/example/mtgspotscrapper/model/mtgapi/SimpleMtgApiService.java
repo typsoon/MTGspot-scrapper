@@ -62,6 +62,7 @@ public class SimpleMtgApiService implements MtgApiService {
         );
     }
 
+    @SuppressWarnings("unused")
     public final CardData getCardDataBrute(String cardName) {
         HttpURLConnection connection = null;
         try {
@@ -127,9 +128,9 @@ public class SimpleMtgApiService implements MtgApiService {
         }
     }
 
-    public static void main(String[] args) {
-        MtgApiService mtgApiService = new SimpleMtgApiService();
-        var card = mtgApiService.getCardData(665583);
-        log.debug("Retrieved card: {}", card);
-    }
+//    public static void main(String[] args) {
+//        MtgApiService mtgApiService = new SimpleMtgApiService();
+//        var card = mtgApiService.getCardData(665583);
+//        log.debug("Retrieved card: {}", card);
+//    }
 }

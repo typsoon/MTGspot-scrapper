@@ -4,6 +4,7 @@ import org.example.mtgspotscrapper.viewmodel.eventHandling.MyEventHandler;
 import org.example.mtgspotscrapper.viewmodel.eventHandling.eventTypes.userInteractionEventTypes.AddListEvent;
 import org.example.mtgspotscrapper.viewmodel.CardList;
 import org.example.mtgspotscrapper.viewmodel.DatabaseService;
+import org.jooq.exception.IntegrityConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,9 +21,12 @@ public class AddListEventHandler extends MyEventHandler<AddListEvent> {
             @SuppressWarnings("unused")
             CardList cardList = databaseService.addList(addListEvent.getListName());
             addListLogger.info("List added, list name: {}", addListEvent.getListName());
-        } catch (Exception e) {
-            addListLogger.error("Failed to add list: {}", addListEvent.getListName(),  e);
-            throw new RuntimeException(e);
+        } catch (IntegrityConstraintViolationException e) {
+            addListLogger.error("Failed to add list: {}, error message {}", addListEvent.getListName(),  e.getMessage());
+//            throw new RuntimeException(e);
+        }
+        catch (Exception e) {
+            addListLogger.error("Failed to add list: {}", addListEvent.getListName(), e);
         }
     }
 }

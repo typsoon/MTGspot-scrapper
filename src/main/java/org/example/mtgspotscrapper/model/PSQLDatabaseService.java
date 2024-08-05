@@ -1,11 +1,9 @@
 package org.example.mtgspotscrapper.model;
 
 import org.example.mtgspotscrapper.model.cardImpl.CardManager;
-import org.example.mtgspotscrapper.model.downloader.SimpleDownloaderService;
 import org.example.mtgspotscrapper.model.listImpl.ListData;
 import org.example.mtgspotscrapper.model.listImpl.SimpleCardList;
 import org.example.mtgspotscrapper.model.mtgapi.MtgApiService;
-import org.example.mtgspotscrapper.model.mtgapi.SimpleMtgApiService;
 import org.example.mtgspotscrapper.viewmodel.Card;
 import org.example.mtgspotscrapper.viewmodel.CardList;
 import org.example.mtgspotscrapper.viewmodel.DatabaseService;
@@ -17,15 +15,12 @@ import org.jooq.*;
 import org.jooq.Record;
 import org.jooq.conf.Settings;
 import org.jooq.impl.DSL;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.sql.*;
 import java.util.*;
 import java.util.concurrent.*;
 
 public class PSQLDatabaseService implements DatabaseService {
-    private static final Logger log = LoggerFactory.getLogger(PSQLDatabaseService.class);
 
     private final DSLContext dslContext;
     private final CardManager cardManager;
@@ -43,12 +38,11 @@ public class PSQLDatabaseService implements DatabaseService {
     @Override
     public Collection<CardList> getAllLists() {
         Collection<CardList> answer = new ArrayList<>();
-        Result<Record> lists = dslContext.select().from(LISTS).leftJoin(LISTSLOGOS)
-                .using(LISTS.LOGO_ID)
+        Result<Record> lists = dslContext.select().from(LISTSWITHLOGOS)
                 .fetch();
 
         for (Record list : lists) {
-            answer.add(new SimpleCardList(new ListData(list.getValue(LISTS.LIST_ID), list.getValue(LISTS.LIST_NAME), list.getValue(LISTSLOGOS.LOGO_PATH)), dslContext, cardManager));
+            answer.add(new SimpleCardList(new ListData(list.getValue(LISTSWITHLOGOS.LIST_ID), list.getValue(LISTSWITHLOGOS.LIST_NAME), list.getValue(LISTSWITHLOGOS.LOGO_PATH)), dslContext, cardManager));
         }
 
         return answer;
@@ -57,10 +51,8 @@ public class PSQLDatabaseService implements DatabaseService {
     @Override
     public CardList getCardList(String name) {
         Result<Record> lists = dslContext.select()
-                .from(LISTS)
-                .leftJoin(LISTSLOGOS)
-                .using(LISTS.LOGO_ID)
-                .where(LISTS.LIST_NAME.eq(name))
+                .from(LISTSWITHLOGOS)
+                .where(LISTSWITHLOGOS.LIST_NAME.eq(name))
                 .fetch();
 
         if (lists.isEmpty()) {
@@ -71,7 +63,7 @@ public class PSQLDatabaseService implements DatabaseService {
         }
 
         Record list = lists.getFirst();
-        return new SimpleCardList(new ListData(list.getValue(LISTS.LIST_ID), list.getValue(LISTS.LIST_NAME), list.getValue(LISTSLOGOS.LOGO_PATH)), dslContext, cardManager);
+        return new SimpleCardList(new ListData(list.getValue(LISTSWITHLOGOS.LIST_ID), list.getValue(LISTSWITHLOGOS.LIST_NAME), list.getValue(LISTSWITHLOGOS.LOGO_PATH)), dslContext, cardManager);
     }
 
     @Override
@@ -81,23 +73,13 @@ public class PSQLDatabaseService implements DatabaseService {
 
     @Override
     public CardList addList(String listName) {
-        try {
-            dslContext.insertInto(LISTS, LISTS.LIST_NAME)
-                    .values(listName).returningResult(LISTS.LIST_ID)
-                    .execute();
+        Integer newListId = dslContext.insertInto(LISTSWITHLOGOS, LISTSWITHLOGOS.LIST_NAME)
+                    .values(listName)
+                    .returningResult(LISTSWITHLOGOS.LIST_ID)
+                    .fetch().map(Record1::component1)
+                    .getFirst();
 
-            int newListId = Objects.requireNonNull(dslContext.select(LISTS.LIST_ID)
-                            .from(LISTS)
-                            .where(LISTS.LIST_NAME.eq(listName))
-                            .fetchOne())
-                    .getValue(LISTS.LIST_ID);
-
-            return new SimpleCardList(new ListData(newListId, listName, null), dslContext, cardManager);
-//            return new SimpleCardList(new ListData(listId, listName, null), dslContext);
-        }
-        catch (Exception e) {
-            return null;
-        }
+        return new SimpleCardList(new ListData(newListId, listName, null), dslContext, cardManager);
     }
 
     @Override
@@ -107,21 +89,9 @@ public class PSQLDatabaseService implements DatabaseService {
 
     @Override
     public boolean deleteList(String listName) {
-        Result<Record1<Integer>> lists = dslContext.selectDistinct(LISTS.LIST_ID).from(LISTS)
-                .where(LISTS.LIST_NAME.eq(listName))
-                .fetch();
-
-        if (lists.isEmpty()) {
-            return false;
-        }
-
-        if (lists.size() > 1) {
-            throw new IllegalStateException("More than one list found for name " + listName);
-        }
-
-        int listId = lists.getFirst().getValue(LISTS.LIST_ID);
-        dslContext.deleteFrom(LISTCARDS).where(LISTCARDS.LIST_ID.eq(listId)).execute();
-        dslContext.deleteFrom(LISTS).where(LISTS.LIST_ID.eq(listId)).execute();
+        dslContext.deleteFrom(LISTSWITHLOGOS)
+                .where(LISTSWITHLOGOS.LIST_NAME.eq(listName))
+                .execute();
 
         return true;
     }
