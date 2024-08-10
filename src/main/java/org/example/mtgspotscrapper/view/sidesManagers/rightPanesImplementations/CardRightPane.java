@@ -5,6 +5,7 @@ import javafx.scene.Node;
 import javafx.scene.control.Label;
 import org.controlsfx.control.CheckComboBox;
 import org.example.mtgspotscrapper.view.AbstractRightPane;
+import org.example.mtgspotscrapper.view.sidesManagers.AutoCompletionSupplier;
 import org.example.mtgspotscrapper.view.viewEvents.guiEvents.ShowListEvent;
 import org.example.mtgspotscrapper.viewmodel.eventHandling.eventTypes.userInteractionEventTypes.AddCardEvent;
 import org.example.mtgspotscrapper.viewmodel.eventHandling.eventTypes.userInteractionEventTypes.DeleteCardEvent;
@@ -13,14 +14,18 @@ import org.example.mtgspotscrapper.viewmodel.eventHandling.records.DeleteCardDat
 import org.example.mtgspotscrapper.viewmodel.CardList;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Objects;
 
 public class CardRightPane extends AbstractRightPane {
-    public CardRightPane(String fxmlPath) throws IOException {
-        super(fxmlPath);
-    }
-
     private CardList cardList;
+    private final Collection<String> allCardsNames;
+
+    public CardRightPane(String fxmlPath, Collection<String> allCardsNames) throws IOException {
+        super(fxmlPath);
+        this.allCardsNames = allCardsNames;
+        load();
+    }
 
     public Node getRightPane(CardList cardList) {
         this.cardList = Objects.requireNonNull(cardList);
@@ -55,5 +60,9 @@ public class CardRightPane extends AbstractRightPane {
             updateAvailability.fireEvent(new UpdateAvailabilityEvent(cardList));
             deleteLabel.fireEvent(new ShowListEvent(cardList));
         });
+
+        AutoCompletionSupplier autoCompletionSupplier = new AutoCompletionSupplier(addDeleteField);
+        autoCompletionSupplier.getEntries().addAll(allCardsNames);
+//        TextFields.bindAutoCompletion(addDeleteField, allCardsNames);
     }
 }

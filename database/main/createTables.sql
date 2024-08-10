@@ -38,5 +38,4 @@ CREATE TABLE scrapper.ListCards (
 CREATE INDEX ON scrapper.ListCards (list_id);
 
 
--- TODO: Change database structure to remove redundancy
 INSERT INTO scrapper.Lists(list_name) VALUES ('Collection');

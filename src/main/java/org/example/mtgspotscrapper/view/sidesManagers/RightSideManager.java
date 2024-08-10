@@ -19,7 +19,8 @@ public class RightSideManager {
     public RightSideManager(Pane rightContainer, DatabaseService databaseService) throws IOException {
         this.rightContainer = rightContainer;
 
-        cardRightPaneController = new CardRightPane(Addresses.CARD_RIGHT_PANE);
+        var allCards = databaseService.getAllCardNames();
+        cardRightPaneController = new CardRightPane(Addresses.CARD_RIGHT_PANE, allCards);
         listRightPaneController = new ListRightPane(Addresses.LIST_RIGHT_PANE);
 
         rightContainer.addEventHandler(AddCardEvent.ADD_CARD_EVENT, new AddCardEventHandler(databaseService));

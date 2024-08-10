@@ -25,6 +25,8 @@ public class PSQLDatabaseService implements DatabaseService {
     private final DSLContext dslContext;
     private final CardManager cardManager;
 
+    private final Collection<String> allCardsNames;
+
     public PSQLDatabaseService(String url, String user, String password, DownloaderService downloaderService, MtgApiService mtgApiService, boolean executeJooqLogging) throws SQLException {
         Connection connection = DriverManager.getConnection(url, user, password);
 
@@ -33,6 +35,10 @@ public class PSQLDatabaseService implements DatabaseService {
 
         dslContext = DSL.using(connection, SQLDialect.POSTGRES, settings);
         cardManager = new CardManager(dslContext, mtgApiService, downloaderService);
+
+        allCardsNames = dslContext.select(ALLCARDSVIEW.CARD_NAME)
+                .from(ALLCARDSVIEW)
+                .fetchInto(String.class);
     }
 
     @Override
@@ -99,5 +105,11 @@ public class PSQLDatabaseService implements DatabaseService {
     @Override
     public Card getCard(String cardName) {
         return cardManager.getCard(cardName);
+    }
+
+
+    @Override
+    public Collection<String> getAllCardNames() {
+        return allCardsNames;
     }
 }

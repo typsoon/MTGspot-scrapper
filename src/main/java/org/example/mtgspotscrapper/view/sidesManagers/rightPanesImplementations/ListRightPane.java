@@ -22,6 +22,7 @@ import java.io.IOException;
 public class ListRightPane extends AbstractRightPane {
     public ListRightPane(String fxmlPath) throws IOException {
         super(fxmlPath);
+        load();
     }
 
     public Node getRightPane() {

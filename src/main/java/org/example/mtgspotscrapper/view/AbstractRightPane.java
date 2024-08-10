@@ -13,7 +13,17 @@ import java.io.IOException;
 
 
 public abstract class AbstractRightPane {
-    protected final Node rightPane;
+    protected Node rightPane;
+    private final FXMLLoader fxmlLoader;
+
+    protected AbstractRightPane(String fxmlPath) {
+        fxmlLoader = new FXMLLoader(App.class.getResource(fxmlPath));
+        fxmlLoader.setController(this);
+    }
+
+    protected void load() throws IOException {
+        rightPane = fxmlLoader.load();
+    }
 
     @SuppressWarnings("unused")
     @FXML
@@ -47,11 +57,4 @@ public abstract class AbstractRightPane {
     @FXML
     protected abstract void initialize();
 
-    protected AbstractRightPane(String fxmlPath) throws IOException {
-
-        FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource(fxmlPath));
-        fxmlLoader.setController(this);
-
-        rightPane = fxmlLoader.load();
-    }
 }

@@ -15,4 +15,6 @@ public interface DatabaseService {
 
     boolean deleteList(String listName);
     Card getCard(String cardName);
+
+    Collection<String> getAllCardNames();
 }
