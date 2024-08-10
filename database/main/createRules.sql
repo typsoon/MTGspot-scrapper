@@ -30,7 +30,7 @@ CREATE OR REPLACE RULE add_card_to_list AS ON INSERT TO scrapper.fulllistdata
 
 CREATE OR REPLACE RULE delete_card_from_list AS ON DELETE TO scrapper.fulllistdata
     DO INSTEAD (
-        DELETE FROM scrapper.listcards WHERE (list_id, card_name) = (old.list_id, old.card_name);
+        DELETE FROM scrapper.listcards WHERE (list_id, multiverse_id) = (old.list_id, old.multiverse_id);
     );
 
 CREATE OR REPLACE FUNCTION scrapper.delete_list(deleted_list_name VARCHAR) RETURNS VOID AS

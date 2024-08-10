@@ -64,10 +64,15 @@ public class SimpleCardList implements CardList {
 
     @Override
     public boolean deleteCardFromList(String cardName) {
+        Card card = cardManager.getCard(cardName);
+        if (card == null) {
+            return false;
+        }
+
         var result = dslContext.select(FULLLISTDATA.MULTIVERSE_ID)
                 .from(FULLLISTDATA)
                 .where(FULLLISTDATA.LIST_ID.eq(listData.id()))
-                .and(FULLLISTDATA.CARD_NAME.eq(cardName))
+                .and(FULLLISTDATA.MULTIVERSE_ID.eq(card.getCardData().multiverseId()))
                 .fetch();
 
         if(result.isEmpty()) {
