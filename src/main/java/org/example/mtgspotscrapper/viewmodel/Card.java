@@ -11,10 +11,10 @@ import java.util.concurrent.ExecutionException;
 public interface Card {
     CardData getCardData();
     CompletableFuture<String> getDownloadedImageAddress() throws ExecutionException, InterruptedException;
-    CardPrice getActCardPrice() throws SQLException;
+    CardPrice getActCardPrice();
     CompletableFuture<CardPrice> getFutureCardPrice() throws SQLException;
 
     @SuppressWarnings({"UnusedReturnValue"})
-    void updatePrice() throws SQLException;
+    void updatePrice();
     Availability getAvailability() throws SQLException;
 }

@@ -20,8 +20,8 @@ CREATE UNIQUE INDEX ON scrapper.AllCards (card_name);
 
 CREATE TABLE scrapper.DownloadedCards (
     multiverse_id INTEGER PRIMARY KEY REFERENCES scrapper.AllCards,
-    previous_price NUMERIC(4, 2) CHECK ( previous_price = -1 OR previous_price IS NULL OR previous_price > 0 ),
-    actual_price NUMERIC(4,2) CHECK ( actual_price = -1 OR actual_price IS NULL OR actual_price > 0 ),
+    previous_price NUMERIC(8, 2) CHECK ( previous_price = -1 OR previous_price IS NULL OR previous_price > 0 ),
+    actual_price NUMERIC(8, 2) CHECK ( actual_price = -1 OR actual_price IS NULL OR actual_price > 0 ),
     image_url VARCHAR UNIQUE NOT NULL
 );
 

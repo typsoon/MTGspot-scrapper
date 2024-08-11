@@ -33,6 +33,7 @@ public class RightSideManager {
 //        borderPane.addEventHandler(SearchCardEvent.SEARCH_CARD, new SearchCardEventHandler(this, databaseService));
 
         rightContainer.addEventHandler(UpdateAvailabilityEvent.UPDATE_AVAILABILITY, new UpdateAvailabilityEventHandler(databaseService));
+        rightContainer.addEventHandler(FixBadPricesEvent.FIX_PRICES, new FixBadPricesEventHandler(databaseService));
     }
 
     public void showListsMenu() {

@@ -44,28 +44,28 @@ public class CardInfoScrapperImpl implements CardInfoScrapper {
                 // Navigate to the page with the form
                 driver.get("https://mtgspot.pl/");
 
-                Thread.sleep(500);
+                Thread.sleep(1000);
 
                 // Wait and click the search lens icon
                 String searchLensXPath = "//*[@id=\"__nuxt\"]/div/div[1]/header/div/div/div[2]/ul/li[1]";
                 WebElement searchLens = wait.until(ExpectedConditions.elementToBeClickable(By.xpath(searchLensXPath)));
                 searchLens.click();
 
-                Thread.sleep(1000);
+                Thread.sleep(1500);
 
                 // Wait for the search field to be visible and interactable
                 String searchFieldId = "advancedSearch";
                 WebElement searchField = wait.until(ExpectedConditions.visibilityOfElementLocated(By.id(searchFieldId)));
                 searchField.sendKeys(cardName);
 
-                Thread.sleep(1000);
+                Thread.sleep(1500);
 
                 // Wait and click the submit button
                 String submitButtonXPath = "//*[@id=\"__nuxt\"]/div/div[1]/header/div/div/div[1]/form/div/div/div[2]/div[7]/button/div[1]";
                 WebElement submitButton = wait.until(ExpectedConditions.elementToBeClickable(By.xpath(submitButtonXPath)));
                 submitButton.click();
 
-                Thread.sleep(1000);
+                Thread.sleep(1500);
 
                 String showFiltersXPath = "//*[@id=\"__nuxt\"]/div/div[1]/div[2]/div[3]";
                 WebElement showFilters = wait.until(ExpectedConditions.elementToBeClickable(By.xpath(showFiltersXPath)));
@@ -85,7 +85,7 @@ public class CardInfoScrapperImpl implements CardInfoScrapper {
                 Select sortBy = new Select(sortBySelectField);
                 sortBy.selectByVisibleText("Cena rosnąco");
 
-                Thread.sleep(6000);
+                Thread.sleep(2000);
 
                 WebElement elementsTable = driver.findElement(By.xpath("//*[@id=\"__nuxt\"]/div/div[1]/div[2]/div[1]"));
                 List<WebElement> elements = elementsTable.findElements(By.tagName("a"));

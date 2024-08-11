@@ -7,8 +7,6 @@ import org.example.mtgspotscrapper.viewmodel.DatabaseService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.SQLException;
-
 public class UpdateAvailabilityEventHandler extends MyEventHandler<UpdateAvailabilityEvent> {
     protected static Logger updateAvailabilityLogger = LoggerFactory.getLogger(UpdateAvailabilityEvent.class);
 
@@ -19,11 +17,11 @@ public class UpdateAvailabilityEventHandler extends MyEventHandler<UpdateAvailab
     @Override
     public void handle(UpdateAvailabilityEvent updateAvailabilityEvent) {
         try {
-            for (Card card : updateAvailabilityEvent.getCardList().getCards())
-                card.updatePrice();
-        } catch (SQLException e) {
+            updateAvailabilityEvent.getCardList()
+                    .getCards()
+                    .forEach(Card::updatePrice);
+        } catch (Exception e) {
             updateAvailabilityLogger.error("Error while updating availability", e);
-            throw new RuntimeException(e);
         }
     }
 }

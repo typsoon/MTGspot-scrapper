@@ -4,6 +4,8 @@ import org.example.mtgspotscrapper.model.scrapper.CardInfoScrapper;
 import org.example.mtgspotscrapper.model.scrapper.CardInfoScrapperImpl;
 import org.example.mtgspotscrapper.viewmodel.Card;
 import org.jooq.DSLContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.util.Objects;
@@ -12,6 +14,7 @@ import java.util.concurrent.*;
 import static org.example.mtgspotscrapper.model.databaseClasses.Tables.*;
 
 public class SimpleCard implements Card {
+    private static final Logger log = LoggerFactory.getLogger(SimpleCard.class);
     private final DSLContext dslContext;
     private final CardData cardData;
     private final CompletableFuture<String> downloadedImageAddress;
@@ -37,19 +40,17 @@ public class SimpleCard implements Card {
 
     @Override
     public CardPrice getActCardPrice() {
-        if (futureCardPrice != null && futureCardPrice.isDone()) {
-            return futureCardPrice.resultNow();
+        if (cachedActPrice != null) {
+            return cachedActPrice;
         }
 
-        if (cachedActPrice == null) {
-            cachedActPrice = Objects.requireNonNull(dslContext.select(FULLDOWNLOADEDCARDDATA.PREVIOUS_PRICE, FULLDOWNLOADEDCARDDATA.ACTUAL_PRICE)
-                            .from(FULLDOWNLOADEDCARDDATA)
-                            .where(FULLDOWNLOADEDCARDDATA.MULTIVERSE_ID.eq(cardData.multiverseId()))
-                            .fetchOne())
-                    .map(priceRecord -> new CardPrice(
-                            nullsafeBigDecToDouble(priceRecord.getValue(FULLDOWNLOADEDCARDDATA.PREVIOUS_PRICE)),
-                            nullsafeBigDecToDouble(priceRecord.getValue(FULLDOWNLOADEDCARDDATA.ACTUAL_PRICE))));
-        }
+        cachedActPrice = Objects.requireNonNull(dslContext.select(FULLDOWNLOADEDCARDDATA.PREVIOUS_PRICE, FULLDOWNLOADEDCARDDATA.ACTUAL_PRICE)
+                        .from(FULLDOWNLOADEDCARDDATA)
+                        .where(FULLDOWNLOADEDCARDDATA.MULTIVERSE_ID.eq(cardData.multiverseId()))
+                        .fetchOne())
+                .map(priceRecord -> new CardPrice(
+                        nullsafeBigDecToDouble(priceRecord.getValue(FULLDOWNLOADEDCARDDATA.PREVIOUS_PRICE)),
+                        nullsafeBigDecToDouble(priceRecord.getValue(FULLDOWNLOADEDCARDDATA.ACTUAL_PRICE))));
 
         return cachedActPrice;
     }
@@ -76,8 +77,15 @@ public class SimpleCard implements Card {
         futureCardPrice = cardInfoScrapper
                 .getCardPrice(cardData.cardName())
                 .thenApply(this::updateDatabaseData)
-                .exceptionally(throwable ->
-                    updateDatabaseData(-1.0));
+                .exceptionally(throwable -> {
+                        try {
+                            return updateDatabaseData(-1.0);
+                        }
+                        finally {
+                            log.error("Error while scrapping data: ", throwable);
+                        }
+                    }
+                );
 
         futureCardPrice.thenApply(cardPrice -> cachedActPrice = cardPrice);
 //        log.debug("Future price: {}, isDone: {}, multiverseId: {}, hash: {}", futureCardPriceWrapper.getFuturePrice(), futureCardPriceWrapper.getFuturePrice().isDone(),
@@ -89,8 +97,8 @@ public class SimpleCard implements Card {
 
         final double actCardPrice = getActCardPrice().actPrice();
 
+        //        Updating the previous_price is handled by psql rule
         dslContext.update(CARDSWITHPRICES)
-                .set(CARDSWITHPRICES.PREVIOUS_PRICE, CARDSWITHPRICES.ACTUAL_PRICE)
                 .set(CARDSWITHPRICES.ACTUAL_PRICE, newActCardPrice != null ? new BigDecimal(newActCardPrice) : null)
                 .where(CARDSWITHPRICES.MULTIVERSE_ID.eq(cardData.multiverseId()))
                 .execute();

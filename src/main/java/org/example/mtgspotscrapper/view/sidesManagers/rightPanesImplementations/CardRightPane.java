@@ -9,6 +9,7 @@ import org.example.mtgspotscrapper.view.sidesManagers.AutoCompletionSupplier;
 import org.example.mtgspotscrapper.view.viewEvents.guiEvents.ShowListEvent;
 import org.example.mtgspotscrapper.viewmodel.eventHandling.eventTypes.userInteractionEventTypes.AddCardEvent;
 import org.example.mtgspotscrapper.viewmodel.eventHandling.eventTypes.userInteractionEventTypes.DeleteCardEvent;
+import org.example.mtgspotscrapper.viewmodel.eventHandling.eventTypes.userInteractionEventTypes.FixBadPricesEvent;
 import org.example.mtgspotscrapper.viewmodel.eventHandling.eventTypes.userInteractionEventTypes.UpdateAvailabilityEvent;
 import org.example.mtgspotscrapper.viewmodel.eventHandling.records.DeleteCardData;
 import org.example.mtgspotscrapper.viewmodel.CardList;
@@ -36,6 +37,10 @@ public class CardRightPane extends AbstractRightPane {
     @FXML
     private Label updateAvailability;
 
+    @SuppressWarnings("unused")
+    @FXML
+    private Label fixBadPrices;
+
     @Override
     protected void initialize() {
         CheckComboBox<String> cb = new CheckComboBox<>();
@@ -59,6 +64,11 @@ public class CardRightPane extends AbstractRightPane {
         updateAvailability.setOnMouseClicked(mouseEvent -> {
             updateAvailability.fireEvent(new UpdateAvailabilityEvent(cardList));
             deleteLabel.fireEvent(new ShowListEvent(cardList));
+        });
+
+        fixBadPrices.setOnMouseClicked(mouseEvent -> {
+            fixBadPrices.fireEvent(new FixBadPricesEvent(cardList));
+            fixBadPrices.fireEvent(new ShowListEvent(cardList));
         });
 
         AutoCompletionSupplier autoCompletionSupplier = new AutoCompletionSupplier(addDeleteField);

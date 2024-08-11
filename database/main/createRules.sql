@@ -5,7 +5,7 @@ CREATE OR REPLACE RULE add_list AS ON INSERT TO listswithlogos
 
 CREATE OR REPLACE RULE update_price AS ON UPDATE TO scrapper.CardsWithPrices
     DO INSTEAD (
-    UPDATE scrapper.downloadedcards SET previous_price = new.previous_price, actual_price = new.actual_price
+    UPDATE scrapper.downloadedcards SET previous_price = actual_price, actual_price = new.actual_price
     WHERE multiverse_id = new.multiverse_id;
 );
 
