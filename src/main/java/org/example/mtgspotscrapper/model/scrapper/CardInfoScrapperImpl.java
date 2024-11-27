@@ -12,7 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -44,7 +43,7 @@ public class CardInfoScrapperImpl implements CardInfoScrapper {
                 // Navigate to the page with the form
                 driver.get("https://mtgspot.pl/");
 
-                Thread.sleep(1000);
+                Thread.sleep(1500);
 
                 // Wait and click the search lens icon
                 String searchLensXPath = "//*[@id=\"__nuxt\"]/div/div[1]/header/div/div/div[2]/ul/li[1]";
@@ -85,20 +84,19 @@ public class CardInfoScrapperImpl implements CardInfoScrapper {
                 Select sortBy = new Select(sortBySelectField);
                 sortBy.selectByVisibleText("Cena rosnąco");
 
-                Thread.sleep(2000);
+                Thread.sleep(8000);
 
                 WebElement elementsTable = driver.findElement(By.xpath("//*[@id=\"__nuxt\"]/div/div[1]/div[2]/div[1]"));
                 List<WebElement> elements = elementsTable.findElements(By.tagName("a"));
 
                 double minPrice = Double.POSITIVE_INFINITY;
 
-                scrapperLogger.info("Number of elements found: {}", elements.size());
                 for (WebElement element : elements) {
                     List<WebElement> children = element.findElements(By.xpath("./*"));
                     String[] data = children.getFirst().getText().split("\n");
 
                     int amount = Integer.parseInt(data[data.length - 2]);
-                    scrapperLogger.info("Scrapped data: {}, amount: {}", Arrays.toString(data), amount);
+//                    scrapperLogger.info("Scrapped data: {}, amount: {}", Arrays.toString(data), amount);
                     String scrappedName = data[0];
 
                     Pattern nameV1 = Pattern.compile("^" + cardName+ "(\\s\\(.*\\))?$");
@@ -111,10 +109,8 @@ public class CardInfoScrapperImpl implements CardInfoScrapper {
                     }
                 }
 
-                Thread.sleep(250);
-
                 // Print the current page URL
-                scrapperLogger.info("Current page URL: {}", driver.getCurrentUrl());
+                scrapperLogger.info("Number of elements found: {}, card: {}, current page URL: {}", elements.size(), cardName, driver.getCurrentUrl());
 
                 if (minPrice == Double.POSITIVE_INFINITY) {
                     return null;

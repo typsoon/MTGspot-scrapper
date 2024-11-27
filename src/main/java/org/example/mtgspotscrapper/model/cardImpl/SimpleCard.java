@@ -4,6 +4,7 @@ import org.example.mtgspotscrapper.model.scrapper.CardInfoScrapper;
 import org.example.mtgspotscrapper.model.scrapper.CardInfoScrapperImpl;
 import org.example.mtgspotscrapper.viewmodel.Card;
 import org.jooq.DSLContext;
+import org.openqa.selenium.StaleElementReferenceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,18 +50,18 @@ public class SimpleCard implements Card {
                         .where(FULLDOWNLOADEDCARDDATA.MULTIVERSE_ID.eq(cardData.multiverseId()))
                         .fetchOne())
                 .map(priceRecord -> new CardPrice(
-                        nullsafeBigDecToDouble(priceRecord.getValue(FULLDOWNLOADEDCARDDATA.PREVIOUS_PRICE)),
-                        nullsafeBigDecToDouble(priceRecord.getValue(FULLDOWNLOADEDCARDDATA.ACTUAL_PRICE))));
+                        nullSafeBigDecToDouble(priceRecord.getValue(FULLDOWNLOADEDCARDDATA.PREVIOUS_PRICE)),
+                        nullSafeBigDecToDouble(priceRecord.getValue(FULLDOWNLOADEDCARDDATA.ACTUAL_PRICE))));
 
         return cachedActPrice;
     }
 
-    private static double nullsafeBigDecToDouble(BigDecimal bigDecimal) {
+    private static double nullSafeBigDecToDouble(BigDecimal bigDecimal) {
         return bigDecimal == null ? 0 : bigDecimal.doubleValue();
     }
 
     @Override
-    public final CompletableFuture<CardPrice> getFutureCardPrice() {
+    public synchronized final CompletableFuture<CardPrice> getFutureCardPrice() {
         if (futureCardPrice == null) {
             futureCardPrice = CompletableFuture.completedFuture(getActCardPrice());
         }
@@ -68,10 +69,9 @@ public class SimpleCard implements Card {
         return futureCardPrice.thenApply(cardPrice -> cardPrice);
     }
 
-//    TODO: make it possible to add -1 values to database to mark that an exception has occurred
     @Override
 //    public CompletableFuture<CardPrice> updatePrice() {
-    public void updatePrice() {
+    public synchronized void updatePrice() {
         CardInfoScrapper cardInfoScrapper = new CardInfoScrapperImpl();
 
         futureCardPrice = cardInfoScrapper
@@ -82,6 +82,11 @@ public class SimpleCard implements Card {
                             return updateDatabaseData(-1.0);
                         }
                         finally {
+                            switch (throwable) {
+                                case TimeoutException ignored -> log.error("Timeout while scrapping {} data: {}", cardData.cardName(), throwable.getMessage());
+                                case StaleElementReferenceException ignored -> log.error("Error while scrapping {} data: {}", cardData.cardName(), throwable.getMessage());
+                                default -> log.error("Error while scrapping data: ", throwable);
+                            }
                             log.error("Error while scrapping data: ", throwable);
                         }
                     }
@@ -96,12 +101,19 @@ public class SimpleCard implements Card {
     private CardPrice updateDatabaseData(Double newActCardPrice) {
 
         final double actCardPrice = getActCardPrice().actPrice();
-
+        if (newActCardPrice == null) {
+            dslContext.update(CARDSWITHPRICES)
+                    .setNull(CARDSWITHPRICES.ACTUAL_PRICE)
+                    .where(CARDSWITHPRICES.MULTIVERSE_ID.eq(cardData.multiverseId()))
+                    .execute();
+        }
+        else {
+            dslContext.update(CARDSWITHPRICES)
+                    .set(CARDSWITHPRICES.ACTUAL_PRICE, new BigDecimal(newActCardPrice))
+                    .where(CARDSWITHPRICES.MULTIVERSE_ID.eq(cardData.multiverseId()))
+                    .execute();
+        }
         //        Updating the previous_price is handled by psql rule
-        dslContext.update(CARDSWITHPRICES)
-                .set(CARDSWITHPRICES.ACTUAL_PRICE, newActCardPrice != null ? new BigDecimal(newActCardPrice) : null)
-                .where(CARDSWITHPRICES.MULTIVERSE_ID.eq(cardData.multiverseId()))
-                .execute();
 
         return new CardPrice(actCardPrice, newActCardPrice != null ? newActCardPrice : actCardPrice);
     }
